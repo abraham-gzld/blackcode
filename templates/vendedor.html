@@ -137,6 +137,7 @@
                     <td>
                         <!-- Botones para aceptar o rechazar -->
                         <form action="{{ url_for('actualizar_estado_venta', venta_id=venta.venta_id) }}" method="POST">
+                            <input type="hidden" name="venta_id" value="{{ venta.venta_id }}">
                             <button type="submit" name="accion" value="aceptar" class="btn btn-success">Aceptar</button>
                             <button type="submit" name="accion" value="rechazar" class="btn btn-danger">Rechazar</button>
                         </form>

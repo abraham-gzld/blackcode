@@ -36,7 +36,7 @@ END //
 
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS InsertarVentaConDetalles;
+DROP PROCEDURE IF EXISTS AceptarVenta;
 
 DELIMITER //
 
@@ -100,7 +100,7 @@ DELIMITER ;
 
 
 
-
+drop procedure AceptarVenta
 ##############################?///////////////////////
 DELIMITER //
 
@@ -151,8 +151,7 @@ BEGIN
     END LOOP;
 
     CLOSE cur;
-
-    -- 4. Insertar en la bitácora que la venta ha sido aceptada
+	    -- 4. Insertar en la bitácora que la venta ha sido aceptada
     INSERT INTO Bitacora (usuario_id, venta_id, accion, fecha, descripcion)
     VALUES (p_usuario_id, p_venta_id, 'Venta Aceptada', NOW(), CONCAT('La venta con ID ', p_venta_id, ' ha sido aceptada. Total: ', v_total));
 
@@ -162,4 +161,3 @@ BEGIN
 END //
 
 DELIMITER ;
-

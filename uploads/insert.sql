@@ -10,6 +10,10 @@ INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, ape
 VALUES 
 ('abraham@gmail.com', 'abrahamg', '123', 'Administrador', 'TI', 'Abraham', 'Gonzalez', 'Dimas', 'AGD850303GHI', '80200', 'Blvd. Universitarios', 20, 30, 'Las Quintas', 'Culiacán', 'Activo');
 
+INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
+VALUES 
+('belem@gmail.com', 'Maria_Picosa', '123', 'Ventas', 'Tienda', 'Belem', 'Picos', 'Picosa', 'BPP850303GHI', '80200', 'Blvd. Universitarios', 20, 30, 'Las Quintas', 'Culiacán', 'Activo');
+
 select * from articulos;
 
 INSERT INTO Categorias_Articulos (nombre) 
@@ -37,8 +41,7 @@ VALUES
 ('Playera Azul Debug', 2, 160.00, 260.00, 16.00, 30, 'Activo', 3, 'playera_3.jpg');
 
 
-delete articulos
-from articulos
-where id = 6;
+select * from articulos
+
 
 

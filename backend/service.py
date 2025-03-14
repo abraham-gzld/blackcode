@@ -45,6 +45,17 @@ def login():
                 return redirect(url_for("vendedor"))  
         return "Usuario o Contraseña incorrectos", 401  
     return render_template("login.html")
+@app.route('/dashboard')
+def dashboard():
+    print("Sesión actual:", session)  # 🔴 Depuración en la consola
+
+    if 'username' in session:
+        username = session['username']
+        return render_template('dashboard.html', username=username)
+    else:
+        print("❌ No hay usuario en sesión")
+        return redirect(url_for('login'))
+
 @app.route('/vendedor')
 def vendedor():
     conexion = obtener_conexion()
@@ -70,11 +81,6 @@ def vendedor():
     conexion.close()
 
     return render_template("vendedor.html", ventas=ventas, username= username)
- 
-    
-
-
-    
 
 @app.route('/cliente')
 def cliente():
@@ -135,6 +141,7 @@ def agregar_carrito(id):
 def mostrar_carrito():
     carrito = session.get('carrito', {})  # Obtiene el carrito de la sesión o un diccionario vacío
     return render_template('carrito.html', carrito=carrito)
+
 @app.route('/eliminar_carrito/<int:id>', methods=['POST'])
 def eliminar_carrito(id):
     carrito = session.get('carrito', {})  
@@ -217,26 +224,74 @@ def procesar_pago():
 
     return jsonify({'success': True, 'message': mensaje, 'venta_id': venta_id})
 
-def actualizar_estado(venta_id, nuevo_estado):
-    # Conexión a la base de datos
+@app.route('/pedidos')
+def ver_pedidos():
+    usuario_id = 1  # Aquí deberías obtener el ID del usuario de la sesión
+    pedidos = obtener_pedidos_por_usuario(usuario_id)  # Función que recupera los pedidos del usuario
+    return render_template('pedidos.html', pedidos=pedidos)
+
+def obtener_pedidos_por_usuario(usuario_id):
     conexion = obtener_conexion()
-    cursor = conexion.cursor()
-    
     try:
-        # Actualizar el estado de la venta en la base de datos
-        sql = "UPDATE venta SET status = %s WHERE id = %s"
-        cursor.execute(sql, (nuevo_estado, venta_id))
-        
-        # Confirmar los cambios (commit en la conexión, no en el cursor)
-        conexion.commit()
-
+        with conexion.cursor() as cursor:
+            cursor.execute("""
+                SELECT v.id AS venta_id, v.fecha, v.total, v.status
+                FROM Venta v
+                WHERE v.usuario_id = %s
+            """, (usuario_id,))
+            return cursor.fetchall()  # Esto devuelve una lista de tuplas
     finally:
-        cursor.close()
-        conexion.close()  # Aseguramos de cerrar la conexión también
+        conexion.close()
 
+@app.route('/pedidos/<int:venta_id>')
+def ver_detalle_pedido(venta_id):
+    detalles = obtener_detalles_pedido(venta_id)  # Función que recupera los detalles del pedido
+    estado = obtener_estado_pedido(venta_id)  # Función que recupera el estado del pedido desde la bitácora
+    total = calcular_total_pedido(venta_id)  # Función que calcula el total del pedido
+    return render_template('detalle_pedido.html', detalles=detalles, estado=estado, venta_id=venta_id, total=total)
 
+def calcular_total_pedido(venta_id):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute("""
+                SELECT SUM(sub_total) 
+                FROM Venta_detalle 
+                WHERE venta_id = %s
+            """, (venta_id,))
+            return cursor.fetchone()[0]  # Retorna el total
+    finally:
+        conexion.close()
+        
+def obtener_detalles_pedido(venta_id):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute("""
+                SELECT a.descripcion, vd.cantidad, vd.sub_total
+                FROM Venta_detalle vd
+                JOIN Articulos a ON vd.articulo_id = a.id
+                WHERE vd.venta_id = %s
+            """, (venta_id,))
+            return cursor.fetchall()
+    finally:
+        conexion.close()
 
-# Función para llamar al procedimiento almacenado de MySQL
+def obtener_estado_pedido(venta_id):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute("""
+                SELECT descripcion
+                FROM Bitacora
+                WHERE venta_id = %s
+                ORDER BY fecha DESC
+                LIMIT 1
+            """, (venta_id,))
+            return cursor.fetchone()
+    finally:
+        conexion.close()
+
 def aceptar_venta(venta_id, usuario_id):
     # Conectar a la base de datos
     conexion = obtener_conexion()
@@ -258,38 +313,60 @@ def aceptar_venta(venta_id, usuario_id):
 @app.route('/actualizar_estado_venta/<int:venta_id>', methods=['POST'])
 def actualizar_estado_venta(venta_id):
     accion = request.form.get('accion')
-    usuario_id = 1  # Asumimos que el usuario actual es el que hace la acción, aquí deberías obtener el ID del usuario de la sesión o del formulario.
+    usuario_id = 1  # Asumimos que el usuario actual es el que hace la acción
 
     if accion == 'aceptar':
-        nuevo_estado = 'Aceptada'
-        
-        # Llamar a la función que ejecuta el procedimiento almacenado
-        aceptar_venta(venta_id, usuario_id)
+        try:
+            aceptar_venta(venta_id, usuario_id)
+            flash('La venta ha sido aceptada con éxito.', 'success')
+        except Exception as e:
+            flash(f'Error al aceptar la venta: {str(e)}', 'danger')
         
     elif accion == 'rechazar':
-        nuevo_estado = 'Rechazada'
-        # Aquí puedes actualizar el estado de la venta si es necesario, por ejemplo, en la base de datos.
-        # No llamamos al procedimiento porque la lógica es diferente.
+        try:
+            # Aquí puedes actualizar el estado de la venta a "Rechazada"
+            rechazar_venta(venta_id, usuario_id)  # Asegúrate de implementar esta función
+            flash('La venta ha sido rechazada con éxito.', 'success')
+        except Exception as e:
+            flash(f'Error al rechazar la venta: {str(e)}', 'danger')
 
     else:
+        flash('Acción no válida.', 'warning')
         return redirect(url_for('ventas'))  # Redirigir a la lista de ventas si no se pasa una acción válida
 
     # Redirigir de vuelta a la página de ventas con el estado actualizado
     return redirect(url_for('vendedor'))
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# Función para llamar al procedimiento almacenado de MySQL
+def aceptar_venta(venta_id, usuario_id):
+    # Conectar a la base de datos
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            # Llamar al procedimiento almacenado AceptarVenta
+            cursor.callproc('AceptarVenta', [venta_id, usuario_id])
+            # Confirmar cambios (commit)
+            conexion.commit()
+    except pymysql.MySQLError as err:
+        # Manejar errores de MySQL
+        print(f"Error: {err}")
+        raise  # Vuelve a lanzar la excepción para que se maneje en la ruta
+    finally:
+        conexion.close()
 
-@app.route('/dashboard')
-def dashboard():
-    print("Sesión actual:", session)  # 🔴 Depuración en la consola
-
-    if 'username' in session:
-        username = session['username']
-        return render_template('dashboard.html', username=username)
-    else:
-        print("❌ No hay usuario en sesión")
-        return redirect(url_for('login'))
+# Implementa la función rechazar_venta si es necesario
+def rechazar_venta(venta_id, usuario_id):
+    # Conectar a la base de datos y actualizar el estado de la venta a "Rechazada"
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute("UPDATE Venta SET status = 'Rechazada' WHERE id = %s", (venta_id,))
+            conexion.commit()
+    except pymysql.MySQLError as err:
+        print(f"Error: {err}")
+        raise  # Vuelve a lanzar la excepción para que se maneje en la ruta
+    finally:
+        conexion.close()
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
