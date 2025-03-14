@@ -82,6 +82,34 @@ def vendedor():
 
     return render_template("vendedor.html", ventas=ventas, username= username)
 
+@app.route("/vendedor_view_user")
+def vendedor_view_users():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    query = "SELECT * FROM Usuarios WHERE rol = 'Cliente'"
+    cursor.execute(query)
+
+    clientes = cursor.fetchall()
+
+    cursor.close()  # Llamar a close() como un método
+    conexion.close()  # Llamar a close() como un método
+    return render_template('vendedor_view_user.html', clientes=clientes)  
+
+@app.route("/vendedor_view_articulo")
+def vendedor_view_articulos():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    query = "SELECT * FROM articulos"
+    cursor.execute(query)
+
+    articulos = cursor.fetchall()
+
+    cursor.close()  # Llamar a close() como un método
+    conexion.close()  # Llamar a close() como un método
+    return render_template('vendedor_view_articulo.html', articulos=articulos)  
+
 @app.route('/cliente')
 def cliente():
     conexion = obtener_conexion()
@@ -212,7 +240,7 @@ def procesar_pago():
 
         session['carrito'] = {}  # Vaciar el carrito después de la compra
         session.modified = True
-        mensaje = f"Compra realizada con éxito. ID Venta: {venta_id}"
+        mensaje = f"Compra realizada con éxito."
 
     except Exception as e:
         conexion.rollback()
@@ -332,9 +360,9 @@ def actualizar_estado_venta(venta_id):
 
     else:
         flash('Acción no válida.', 'warning')
-        return redirect(url_for('ventas'))  # Redirigir a la lista de ventas si no se pasa una acción válida
+        return redirect(url_for('ventas'))  
 
-    # Redirigir de vuelta a la página de ventas con el estado actualizado
+   
     return redirect(url_for('vendedor'))
 
 # Función para llamar al procedimiento almacenado de MySQL

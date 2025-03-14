@@ -116,32 +116,24 @@
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th>ID Venta</th>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Método de Pago</th>
-                    <th>Status</th>
-                    <th>Acción</th> <!-- Nueva columna para las acciones -->
+                    <th>ID Cliente</th>
+                    <th>Nombre</th>
+                    <th>Apellido Paterno</th>
+                    <th>Apellido Materno</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
                 </tr>
             </thead>
             <tbody>
-                {% for venta in ventas %}
+                {% for cliente in clientes %}
                 <tr>
-                    <td>{{ venta.venta_id }}</td>
-                    <td>{{ venta.fecha }}</td>
-                    <td>{{ venta.cliente }}</td>
-                    <td>${{ venta.total }}</td>
-                    <td>{{ venta.metodo_pago }}</td>
-                    <td>{{ venta.status }}</td>
-                    <td>
-                        <!-- Botones para aceptar o rechazar -->
-                        <form action="{{ url_for('actualizar_estado_venta', venta_id=venta.venta_id) }}" method="POST">
-                            <input type="hidden" name="venta_id" value="{{ venta.venta_id }}">
-                            <button type="submit" name="accion" value="aceptar" class="btn btn-success">Aceptar</button>
-                            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">Rechazar</button>
-                        </form>
-                    </td>
+                    <td>{{ cliente.id }}</td>  <!-- ID del cliente -->
+                    <td>{{ cliente.nombres }}</td>  <!-- Nombre del cliente -->
+                    <td>{{ cliente.apellido_paterno }}</td>  <!-- Apellido paterno -->
+                    <td>{{ cliente.apellido_materno }}</td>  <!-- Apellido materno -->
+                    <td>{{ cliente.email }}</td>  <!-- Email del cliente -->
+                    <td>{{ cliente.telefono }}</td>  <!-- Teléfono del cliente -->
+                    
                 </tr>
                 {% endfor %}
             </tbody>

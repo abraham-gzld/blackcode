@@ -116,32 +116,25 @@
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th>ID Venta</th>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Método de Pago</th>
+                    <th>ID Artículo</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Costo</th>
+                    <th>Precio</th>
+                    <th>Existencia</th>
                     <th>Status</th>
-                    <th>Acción</th> <!-- Nueva columna para las acciones -->
                 </tr>
             </thead>
             <tbody>
-                {% for venta in ventas %}
+                {% for articulo in articulos %}
                 <tr>
-                    <td>{{ venta.venta_id }}</td>
-                    <td>{{ venta.fecha }}</td>
-                    <td>{{ venta.cliente }}</td>
-                    <td>${{ venta.total }}</td>
-                    <td>{{ venta.metodo_pago }}</td>
-                    <td>{{ venta.status }}</td>
-                    <td>
-                        <!-- Botones para aceptar o rechazar -->
-                        <form action="{{ url_for('actualizar_estado_venta', venta_id=venta.venta_id) }}" method="POST">
-                            <input type="hidden" name="venta_id" value="{{ venta.venta_id }}">
-                            <button type="submit" name="accion" value="aceptar" class="btn btn-success">Aceptar</button>
-                            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">Rechazar</button>
-                        </form>
-                    </td>
+                    <td>{{ articulo.id }}</td>  <!-- ID del artículo -->
+                    <td>{{ articulo.descripcion }}</td>  <!-- Descripción del artículo -->
+                    <td>{{ articulo.categoria_id }}</td>  <!-- ID de la categoría (puedes cambiar esto para mostrar el nombre de la categoría si lo tienes) -->
+                    <td>${{ articulo.costo }}</td>  <!-- Costo del artículo -->
+                    <td>${{ articulo.precio }}</td>  <!-- Precio del artículo -->
+                    <td>{{ articulo.existencia }}</td>  <!-- Existencia del artículo -->
+                    <td>{{ articulo.status }}</td>  <!-- Estado del artículo -->
                 </tr>
                 {% endfor %}
             </tbody>
