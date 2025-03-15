@@ -41,7 +41,11 @@ def login():
             elif rol == "Cliente":
                 return redirect(url_for("cliente"))
             elif rol == "Ventas":
-                return redirect(url_for("vendedor"))  
+                return redirect(url_for("vendedor"))
+            elif rol == "Almacen":
+                return redirect(url_for("almacen"))
+            elif rol == "Logistica":
+                return redirect(url_for("logistica")) 
         return "Usuario o Contraseña incorrectos", 401  
     return render_template("login.html")
 @app.route('/dashboard')
@@ -80,6 +84,29 @@ def vendedor():
     conexion.close()
 
     return render_template("vendedor.html", ventas=ventas, username= username)
+
+@app.route('/almacen')
+def almacen():
+    if 'username' not in session or session.get('rol') != 'Almacen':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('login'))
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Consulta para mostrar artículos disponibles en el almacén
+    query = """
+        SELECT A.id, A.descripcion, A.existencia
+        FROM Articulos A
+        WHERE A.existencia > 0;
+        """
+    cursor.execute(query)
+    articulos = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render_template('almacen.html', username=session['username'], articulos=articulos)
 
 @app.route("/vendedor_view_user")
 def vendedor_view_users():

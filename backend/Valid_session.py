@@ -24,5 +24,9 @@ def validar_usuario(email, password):
             return redirect(url_for("cliente"))
         elif rol == "Vendedor":
             return redirect(url_for("vendedor"))
+        elif rol == "Almacen":
+            return redirect(url_for("almacen"))
+        elif rol == "Logistica":
+            return redirect(url_for("logistica"))
 
     return "Usuario o Contraseña incorrectos", 401
