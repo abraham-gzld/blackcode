@@ -1,7 +1,6 @@
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql
 from conexionBD import obtener_conexion
-from Valid_session import validar_usuario
 
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"

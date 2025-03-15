@@ -11,6 +11,7 @@ body{
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    height: 100%;
 }
 .wrapper{
     position: relative;
@@ -20,6 +21,8 @@ body{
     border-radius: 20px;
     padding: 40px;
     overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
 }
 .from-wrapper{
     display: flex;
@@ -30,18 +33,20 @@ body{
     transition: 1s ease-in-out;
 }
 
-
 .wrapper .from-wrapper.sing-up{
     position: absolute;
     top: 450px;
     left: 0;
 }
+
 .wrapper.active .from-wrapper.sing-up{
      transform: translateY(-450px);
 }
+
 .wrapper.active .from-wrapper.sing-in{
     transform: translateY(-450px);
 }
+
 h2{
     font-size: 30px;
     color: white !important;
@@ -50,7 +55,7 @@ h2{
 
 .input-group{
     position: relative;
-    margin: 30px 0;
+    margin: 25px 0;
     border-bottom: 2px solid white;
 }
 .input-group label{
@@ -82,13 +87,16 @@ h2{
 .remember{
     margin: -5px 0 15px 5px;
 }
+
 .remember label{
     color: white;
     font-size: 14px;
 }
+
 .remember label input{
     accent-color: #0ef;
 }
+
 button{
     position: relative;
     width: 100%;
@@ -102,38 +110,47 @@ button{
     border-radius: 30px !important;
     outline: none;
 }
+
 button:hover{
     background-color: rgb(220, 253, 255);
 }
+
 .singIn-link{
     font-size: 14px;
     text-align: center;
     margin: 15px 0 ;
 }
+
 .singUp-link{
     font-size: 14px;
     text-align: center;
     margin: 15px 0 ;
 }
+
 .singUp-link p{
     color: white;
 }
+
 .singUp-link p a{
     color: rgb(255, 255, 255);
     text-decoration: none;
     font-weight: 500;
 }
+
 .singUp-link p a:hover{
     text-decoration: underline;
 }
+
 .singIn-link p{
     color: white;
 }
+
 .singIn-link p a{
     color: rgb(255, 255, 255);
     text-decoration: none;
     font-weight: 500;
 }
+
 .singIn-link p a:hover{
     text-decoration: underline;
 }
