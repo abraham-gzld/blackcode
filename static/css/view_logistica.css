@@ -1,0 +1,100 @@
+body {
+    background: #ECE9E6;
+    background: linear-gradient(to right, #FFFFFF, #ECE9E6);
+    font-family: Arial, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 24px;
+}
+
+h2 {
+    color: #333;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body h5 {
+    color: #222;
+}
+
+.badge {
+    font-size: 0.9rem;
+}
+
+footer {
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+}
+
+.offcanvas {
+    width: 250px;
+}
+
+.accordion-button::after {
+    color: white;
+}
+
+.accordion-item {
+    background-color: #343a40;
+    border: none;
+}
+
+.accordion-button {
+    background-color: #343a40;
+    color: #fff;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #495057;
+}
+
+.accordion-body ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+.accordion-body ul li a:hover {
+    background-color: #495057;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.btn-info:hover {
+    background-color: #31d2f2;
+}
+
+.Options ul {
+    display: flex;
+    list-style: none;
+    gap: 40px;
+    padding: 0;
+}
+
+.Options ul li a i {
+    padding: 10px;
+    color: #333;
+    font-size: 24px;
+}

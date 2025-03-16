@@ -108,6 +108,39 @@ def almacen():
 
     return render_template('almacen.html', username=session['username'], articulos=articulos)
 
+@app.route('/logistica')
+def logistica():
+    if 'username' not in session or session.get('rol') not in ['Logistica', 'Administrador']:
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('login'))
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener los pedidos de hoy en distribución
+    query = """
+        SELECT D.id AS distribucion_id,
+               D.venta_id,
+               V.usuario_id AS cliente_id,
+               CONCAT(U.nombres, ' ', U.apellido_paterno) AS cliente,
+               U.calle,
+               U.colonia,
+               U.ciudad,
+               D.fecha_envio,
+               D.status
+        FROM Distribucion D
+        INNER JOIN Venta V ON D.venta_id = V.id
+        INNER JOIN Usuarios U ON V.usuario_id = U.id
+        WHERE D.fecha_envio = CURDATE()
+    """
+    cursor.execute(query)
+    distribuciones = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render_template('logistica.html', username=session['username'], distribuciones=distribuciones)
+
 @app.route("/vendedor_view_user")
 def vendedor_view_users():
     conexion = obtener_conexion()
