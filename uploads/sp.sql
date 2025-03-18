@@ -1,5 +1,4 @@
 DELIMITER //
-
 CREATE PROCEDURE InsertarVentaConDetalles(
     IN p_usuario_id INT,
     IN p_total DOUBLE,
@@ -104,7 +103,7 @@ drop procedure AceptarVenta
 ##############################?///////////////////////
 DELIMITER //
 
-CREATE PROCEDURE AceptarVenta(
+CREATE PROCEDURE almacenAceptaVenta(
     IN p_venta_id INT, 
     IN p_usuario_id INT
 )
@@ -158,6 +157,34 @@ BEGIN
     -- Si todo sale bien, confirmar la transacción
     COMMIT;
 
+END //
+
+DELIMITER ;
+
+
+drop procedure sp_aceptar_pedido
+# Proceso de Almacen
+DELIMITER //
+
+CREATE PROCEDURE almacenAceptaVenta(IN p_venta_id INT)
+BEGIN
+    DECLARE v_usuario_id INT;
+    DECLARE v_fecha DATE;
+    DECLARE v_total DOUBLE;
+    DECLARE v_metodo_pago VARCHAR(20);
+
+    -- Obtener los datos de la venta antes de eliminarla
+    SELECT usuario_id, fecha, total, metodo_pago
+    INTO v_usuario_id, v_fecha, v_total, v_metodo_pago
+    FROM venta
+    WHERE id = p_venta_id;
+
+    -- Insertar en bitácora el cambio de estado
+    INSERT INTO bitacora (usuario_id, venta_id, accion, fecha, descripcion)
+    VALUES (v_usuario_id, p_venta_id, 'Procesando pedido', NOW(), 'Pedido aceptado por almacén.');
+
+    -- Eliminar la venta de la tabla después de registrar la bitácora
+    DELETE FROM venta WHERE id = p_venta_id;
 END //
 
 DELIMITER ;

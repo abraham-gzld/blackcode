@@ -63,6 +63,25 @@ def dashboard():
     else:
         print("❌ No hay usuario en sesión")
         return redirect(url_for('login'))
+    
+@app.route("/almacen_view_pedidos")
+def almacen_view_pedidos():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    query = "SELECT id, usuario_id, fecha, total, metodo_pago, status FROM venta WHERE status = 'Aceptada'"
+    cursor.execute(query)
+
+    # Obtener los datos correctamente
+    columnas = [col[0] for col in cursor.description]  
+    ventas = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]  
+
+    cursor.close()
+    conexion.close()
+
+    return render_template("almacen_view_pedidos.html", ventas=ventas)
+
+
 
 @app.route('/vendedor')
 def vendedor():
@@ -89,6 +108,25 @@ def vendedor():
     conexion.close()
 
     return render_template("vendedor.html", ventas=ventas, username= username)
+@app.route("/almacen_acepta_pedido/<int:venta_id>", methods=["POST"])
+def almacen_acepta_pedido(venta_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    try:
+        # Llamar al procedimiento almacenado
+        cursor.callproc("almacenAceptaVenta", (venta_id,))
+        conexion.commit()
+
+        flash("Pedido aceptado y eliminado correctamente.", "success")
+    except Exception as e:
+        conexion.rollback()
+        flash(f"Error al aceptar el pedido: {str(e)}", "danger")
+    finally:
+        cursor.close()
+        conexion.close()
+
+    return redirect(url_for("almacen_view_pedidos")) 
 
 @app.route("/almacen_view_update")
 def almacen_update():
@@ -123,6 +161,36 @@ def actualizar_existencia():
     conexion.close()
 
     return jsonify({"success": True})
+
+@app.route("/pedidos_aceptados")
+def pedidos_aceptados():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT * FROM venta WHERE status = 'Aceptada'")
+    ventas = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render_template("pedidos_aceptados.html", ventas=ventas)
+
+
+@app.route("/gestionar_pedido/<int:venta_id>/<accion>", methods=["POST"])
+def gestionar_pedido(venta_id, accion):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    if accion == "rechazar":
+        cursor.execute("UPDATE venta SET status = 'Rechazada' WHERE id = %s", (venta_id,))
+    elif accion == "finalizar":
+        cursor.execute("CALL sp_actualizar_estado_pedido(%s, 'Finalizado')", (venta_id,))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    return jsonify({"mensaje": "Pedido actualizado correctamente."})
 
 
 @app.route("/almacen_view_articulos")
