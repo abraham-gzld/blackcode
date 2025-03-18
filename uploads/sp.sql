@@ -153,7 +153,7 @@ BEGIN
     CLOSE cur;
 	    -- 4. Insertar en la bitácora que la venta ha sido aceptada
     INSERT INTO Bitacora (usuario_id, venta_id, accion, fecha, descripcion)
-    VALUES (p_usuario_id, p_venta_id, 'Venta Aceptada', NOW(), CONCAT('La venta con ID ', p_venta_id, ' ha sido aceptada. Total: ', v_total));
+    VALUES (p_usuario_id, p_venta_id, 'Venta Aceptada', NOW(), CONCAT('La venta', p_venta_id, ' ha sido aceptada'));
 
     -- Si todo sale bien, confirmar la transacción
     COMMIT;

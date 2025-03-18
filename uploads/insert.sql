@@ -4,6 +4,10 @@ VALUES
 
 INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
 VALUES 
+('carlossalas@gmail.com', 'samuelv', '123', 'Cliente', 'cliente', 'Carlos', 'Salas', 'Lopez', 'SAVL900101ABC', '80000', 'Av. Reforma', 10, 25, 'Centro', 'Culiacán', 'Activo');
+
+INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
+VALUES 
 ('carlos@gmail.com', 'carlosl', '123', 'Compras', 'Compras', 'Carlos Serapio', 'Lopez', '', 'CSL920202DEF', '80100', 'Av. Insurgentes', 5, 12, 'Chapultepec', 'Culiacán', 'Activo');
 
 INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
@@ -44,5 +48,7 @@ VALUES
 
 ('Playera Azul Debug', 2, 160.00, 260.00, 16.00, 30, 'Activo', 3, 'playera_3.jpg');
 
-
-Select * from Proveedores;
+Select * from articulos;
+delete articulos 
+from articulos 
+where id= 13;

@@ -3,10 +3,9 @@ import pymysql, os
 from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion
 
-
-
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"
+app.secret_key
 import os
 
 
@@ -53,6 +52,7 @@ def login():
                 return redirect(url_for("logistica")) 
         return "Usuario o Contraseña incorrectos", 401  
     return render_template("login.html")
+
 @app.route('/dashboard')
 def dashboard():
     print("Sesión actual:", session)  # 🔴 Depuración en la consola
@@ -89,6 +89,41 @@ def vendedor():
     conexion.close()
 
     return render_template("vendedor.html", ventas=ventas, username= username)
+
+@app.route("/almacen_view_update")
+def almacen_update():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)  # 🔹 Usa `DictCursor`
+    query = "SELECT * FROM Articulos"
+    cursor.execute(query)
+    articulos = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    
+    return render_template("almacen_view_update.html", articulos=articulos)
+
+# Ruta para actualizar la existencia
+@app.route("/actualizar_existencia", methods=["POST"])
+def actualizar_existencia():
+    datos = request.get_json()
+    articulo_id = datos.get("id")
+    nueva_existencia = datos.get("existencia")
+
+    if not articulo_id or not isinstance(nueva_existencia, int) or nueva_existencia < 0:
+        return jsonify({"success": False, "error": "Datos inválidos"}), 400
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True)
+    
+    query = "UPDATE Articulos SET existencia = %s WHERE id = %s"
+    cursor.execute(query, (nueva_existencia, articulo_id))
+    conexion.commit()
+
+    cursor.close()
+    conexion.close()
+
+    return jsonify({"success": True})
+
 
 @app.route("/almacen_view_articulos")
 def almacen_articulos():
@@ -525,6 +560,8 @@ def aceptar_venta(venta_id, usuario_id):
 def rechazar_venta(venta_id, usuario_id):
     # Conectar a la base de datos y actualizar el estado de la venta a "Rechazada"
     conexion = obtener_conexion()
+    cursor = conexion.cursor(dictionary=True) 
+
     try:
         with conexion.cursor() as cursor:
             cursor.execute("UPDATE Venta SET status = 'Rechazada' WHERE id = %s", (venta_id,))

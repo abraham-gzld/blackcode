@@ -69,7 +69,7 @@
                         <ul class="list-unstyled">
                             <li><a href="/almacen_view_articulos" class="text-white d-block p-2">Ver Artículos</a></li>
                             <li><a href="/almacen_view_addArticulos" class="text-white d-block p-2">Registrar Artículo</a></li>
-                            <li><a href="/almacen_actualizar_existencias" class="text-white d-block p-2">Actualizar Existencias</a></li>
+                            <li><a href="/almacen_view_update" class="text-white d-block p-2">Actualizar Existencias</a></li>
                         </ul>
                     </div>
                 </div>
@@ -111,10 +111,14 @@
         </div>
     </div>
 
-    <h2 style="display: flex; justify-content: center; margin: 20px;">Vista de articulos</h2>
+    <h2 style="display: flex; justify-content: center; margin: 20px;">Vista de artículos</h2>
+    <div class="d-flex justify-content-center mb-3">
+        <input type="text" id="searchInput" class="form-control w-25" placeholder="Buscar por ID de Artículo..." onkeyup="filtrarTabla()">
+    </div>
     <div class="container mt-4">
         
-        <table class="table table-dark table-striped">
+    
+        <table class="table table-dark table-striped" id="tablaArticulos">
             <thead>
                 <tr>
                     <th>ID Artículo</th>
@@ -129,13 +133,13 @@
             <tbody>
                 {% for articulo in articulos %}
                 <tr>
-                    <td>{{ articulo.id }}</td>  <!-- ID del artículo -->
-                    <td>{{ articulo.descripcion }}</td>  <!-- Descripción del artículo -->
-                    <td>{{ articulo.categoria_id }}</td>  <!-- ID de la categoría (puedes cambiar esto para mostrar el nombre de la categoría si lo tienes) -->
-                    <td>${{ articulo.costo }}</td>  <!-- Costo del artículo -->
-                    <td>${{ articulo.precio }}</td>  <!-- Precio del artículo -->
-                    <td>{{ articulo.existencia }}</td>  <!-- Existencia del artículo -->
-                    <td>{{ articulo.status }}</td>  <!-- Estado del artículo -->
+                    <td>{{ articulo.id }}</td>
+                    <td>{{ articulo.descripcion }}</td>
+                    <td>{{ articulo.categoria_id }}</td>
+                    <td>${{ articulo.costo }}</td>
+                    <td>${{ articulo.precio }}</td>
+                    <td>{{ articulo.existencia }}</td>
+                    <td>{{ articulo.status }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -153,6 +157,6 @@
         </ul>
         <p class="text-center text-body-secondary">© 2024 BlackCode, Inc</p>
     </footer>
-
+    <script src="{{ url_for('static', filename='js/almacen_vier_articulo.js') }}"></script>
 </body>
 </html>

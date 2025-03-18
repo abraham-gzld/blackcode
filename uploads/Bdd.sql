@@ -5,6 +5,8 @@ USE Negocios;
 DROP DATABASE Negocios;
 DROP TABLE Clientes;
 
+
+select * from usuarios;
 -- Tabla: Usuarios
 CREATE TABLE Usuarios (
     id INT PRIMARY KEY auto_increment,
