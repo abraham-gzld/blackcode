@@ -1,9 +1,14 @@
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
-import pymysql
+import pymysql, os 
+from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion
+
+
 
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"
+import os
+
 
 @app.route("/")
 def hello_word():
@@ -84,6 +89,81 @@ def vendedor():
     conexion.close()
 
     return render_template("vendedor.html", ventas=ventas, username= username)
+
+@app.route("/almacen_view_articulos")
+def almacen_articulos():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    query= "Select * from articulos"
+
+    cursor.execute(query)
+    articulos = cursor.fetchall()
+
+    return render_template("almacen_view_articulos.html", articulos = articulos)
+
+UPLOAD_FOLDER = 'static/img'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.route("/almacen_view_addArticulos", methods=['GET', 'POST'])
+def almacen_add():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT id, nombre FROM Proveedores")
+    proveedores = cursor.fetchall()
+    proveedores = [{'id': id, 'nombre': nombre} for id, nombre in proveedores]
+
+    cursor.execute("SELECT id, nombre FROM Categorias_Articulos")
+    categorias = cursor.fetchall()
+    categorias = [{'id': id, 'nombre': nombre} for id, nombre in categorias]
+
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        descripcion = request.form.get('descripcion')
+        categoria_id = request.form.get('categoria')
+        proveedor_id = request.form.get('proveedor')
+        costo = request.form.get('costo')
+        precio = request.form.get('precio')
+        existencia = request.form.get('existencia')
+        status = request.form.get('status')
+
+        # Manejo de la imagen
+        imagen = request.files.get('imagen')
+        imagen_filename = None
+        if imagen and imagen.filename != '':
+            imagen_filename = secure_filename(imagen.filename)
+            imagen_path = os.path.join(app.config['UPLOAD_FOLDER'], imagen_filename)
+            imagen.save(imagen_path)
+
+        # Validar los datos
+        if not descripcion or not categoria_id or not proveedor_id or not costo or not precio or not existencia or not status:
+            flash('Todos los campos son obligatorios.', 'danger')
+            return redirect(url_for('almacen_add'))
+
+        try:
+            # Insertar el nuevo artículo en la base de datos
+            query = """
+            INSERT INTO Articulos (descripcion, categoria_id, provedor_id, costo, precio, existencia, status, imagen)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+
+            cursor.execute(query, (descripcion, categoria_id, proveedor_id, costo, precio, existencia, status, imagen_filename))
+            conexion.commit()
+
+            flash('Artículo agregado exitosamente', 'success')
+        except Exception as e:
+            flash(f'Ocurrió un error: {str(e)}', 'danger')
+        finally:
+            cursor.close()
+            conexion.close()
+
+        return redirect(url_for('almacen_add'))
+
+    return render_template('almacen_view_addArticulos.html', categorias=categorias, proveedores=proveedores)
+
 
 @app.route('/almacen')
 def almacen():

@@ -12,6 +12,10 @@ VALUES
 
 INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
 VALUES 
+('crisitna@gmail.com', 'Cristina_s', '123', 'Almacen', 'TI', 'Cristina', 'Solis', 'Contreras', 'CSC850303GHI', '80201', 'Blvd. Universitarios', 20, 30, 'Las Quintas', 'Culiacán', 'Activo');
+
+INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
+VALUES 
 ('belem@gmail.com', 'Maria_Picosa', '123', 'Ventas', 'Tienda', 'Belem', 'Picos', 'Picosa', 'BPP850303GHI', '80200', 'Blvd. Universitarios', 20, 30, 'Las Quintas', 'Culiacán', 'Activo');
 
 select * from articulos;
@@ -40,38 +44,5 @@ VALUES
 
 ('Playera Azul Debug', 2, 160.00, 260.00, 16.00, 30, 'Activo', 3, 'playera_3.jpg');
 
--- Playeras
-INSERT INTO Articulos (descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id, imagen)
-VALUES 
-('Playera Negra "Hello World"', 1, 150.00, 300.00, 48.00, 50, 'Activo', 1, 'playera_negra_hello_world.jpg'),
-('Playera Blanca "Code is Life"', 1, 140.00, 280.00, 44.80, 40, 'Activo', 1, 'playera_blanca_code_is_life.jpg'),
-('Playera Gris "Git Commit"', 1, 160.00, 320.00, 51.20, 30, 'Activo', 2, 'playera_gris_git_commit.jpg'),
-('Playera Azul "Debugging Mode"', 1, 155.00, 310.00, 49.60, 25, 'Activo', 2, 'playera_azul_debugging_mode.jpg'),
-('Playera Negra "404 Not Found"', 1, 145.00, 290.00, 46.40, 35, 'Activo', 3, 'playera_negra_404_not_found.jpg');
 
--- Sudaderas
-INSERT INTO Articulos (descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id, imagen)
-VALUES 
-('Sudadera Negra "Coffee & Code"', 2, 300.00, 600.00, 96.00, 20, 'Activo', 1, 'sudadera_negra_coffee_code.jpg'),
-('Sudadera Gris "Eat Sleep Code Repeat"', 2, 310.00, 620.00, 99.20, 15, 'Activo', 2, 'sudadera_gris_eat_sleep_code.jpg'),
-('Sudadera Azul "No Bugs, Just Features"', 2, 320.00, 640.00, 102.40, 10, 'Activo', 3, 'sudadera_azul_no_bugs.jpg');
-
--- Gorras
-INSERT INTO Articulos (descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id, imagen)
-VALUES 
-('Gorra Negra "Ctrl + Alt + Del"', 3, 100.00, 200.00, 32.00, 30, 'Activo', 1, 'gorra_negra_ctrl_alt_del.jpg'),
-('Gorra Azul "Code Mode Activated"', 3, 110.00, 220.00, 35.20, 25, 'Activo', 2, 'gorra_azul_code_mode.jpg');
-
--- Tazas
-INSERT INTO Articulos (descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id, imagen)
-VALUES 
-('Taza Blanca "Eat Sleep Code Repeat"', 4, 80.00, 160.00, 25.60, 50, 'Activo', 1, 'taza_blanca_eat_sleep_code.jpg'),
-('Taza Negra "Code is Life"', 4, 85.00, 170.00, 27.20, 45, 'Activo', 2, 'taza_negra_code_is_life.jpg');
-
--- Accesorios
-INSERT INTO Articulos (descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id, imagen)
-VALUES 
-('Llavero "Hello World"', 5, 20.00, 40.00, 6.40, 100, 'Activo', 1, 'llavero_hello_world.jpg'),
-('Stickers Pack "Programmer Life"', 5, 50.00, 100.00, 16.00, 200, 'Activo', 2, 'stickers_programmer_life.jpg');
-
-select * from articulos
+Select * from Proveedores;

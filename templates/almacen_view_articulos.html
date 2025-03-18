@@ -102,49 +102,57 @@
                 <div id="pedidosCollapse" class="accordion-collapse collapse">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="/almacen_ver_pedidos"
-                              <li><a href="/almacen_ver_pedidos" class="text-white d-block p-2">Consultar Estatus Pedido</a></li>
-                              <li><a href="/almacen_surtir_pedido" class="text-white d-block p-2">Surtir Pedido / Devolución Recibida</a></li>
-                          </ul>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-  
-      <h2 class="text-center mb-4">Artículos en Almacén</h2>
-      <!-- CONTENIDO PRINCIPAL -->
-      <div class="container mt-4">
-          <!-- Grid de Artículos -->
-          <div class="row row-cols-1 row-cols-md-3 g-4">
-              {% for articulo in articulos %}
-              <div class="col">
-                  <div class="card h-100 shadow">
-                      <div class="card-body">
-                          <h5 class="card-title">{{ articulo.descripcion }}</h5>
-                          <p class="card-text">Stock: {{ articulo.existencia }}</p>
-                          <div class="d-flex justify-content-between">
-                              <a href="/almacen_editar_producto/{{ articulo.id }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i> Editar</a>
-                              <a href="/almacen_agregar_stock/{{ articulo.id }}" class="btn btn-success btn-sm"><i class="bi bi-plus-circle"></i> Agregar Stock</a>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              {% endfor %}
-          </div>
-      </div>
-  
-      <!-- FOOTER -->
-      <footer class="py-3 my-4">
-          <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-              <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
-              <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Features</a></li>
-              <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Pricing</a></li>
-              <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">FAQs</a></li>
-              <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
-          </ul>
-          <p class="text-center text-body-secondary">© 2024 BlackCode, Inc</p>
-      </footer>
-  
-  </body>
-  </html>
+                            <li><a href="/almacen_ver_pedidos" class="text-white d-block p-2">Consultar Estatus Pedido</a></li>
+                            <li><a href="/almacen_surtir_pedido" class="text-white d-block p-2">Surtir Pedido / Devolución Recibida</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 style="display: flex; justify-content: center; margin: 20px;">Vista de articulos</h2>
+    <div class="container mt-4">
+        
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>ID Artículo</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Costo</th>
+                    <th>Precio</th>
+                    <th>Existencia</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for articulo in articulos %}
+                <tr>
+                    <td>{{ articulo.id }}</td>  <!-- ID del artículo -->
+                    <td>{{ articulo.descripcion }}</td>  <!-- Descripción del artículo -->
+                    <td>{{ articulo.categoria_id }}</td>  <!-- ID de la categoría (puedes cambiar esto para mostrar el nombre de la categoría si lo tienes) -->
+                    <td>${{ articulo.costo }}</td>  <!-- Costo del artículo -->
+                    <td>${{ articulo.precio }}</td>  <!-- Precio del artículo -->
+                    <td>{{ articulo.existencia }}</td>  <!-- Existencia del artículo -->
+                    <td>{{ articulo.status }}</td>  <!-- Estado del artículo -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="py-3 my-4">
+        <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Features</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Pricing</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">FAQs</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
+        </ul>
+        <p class="text-center text-body-secondary">© 2024 BlackCode, Inc</p>
+    </footer>
+
+</body>
+</html>
