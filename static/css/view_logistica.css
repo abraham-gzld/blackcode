@@ -1,100 +1,135 @@
-body {
-    background: #ECE9E6;
-    background: linear-gradient(to right, #FFFFFF, #ECE9E6);
-    font-family: Arial, sans-serif;
+*{
+    margin: 0;
+    padding:0;
+}
+body{
+    background: #ECE9E6;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #FFFFFF, #ECE9E6);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    overflow-x: hidden;
 }
 
-.navbar-brand {
-    font-weight: bold;
-    font-size: 24px;
+.dropdown-menu {
+    min-width: 200px;
 }
 
-h2 {
-    color: #333;
-}
-
-.card {
-    transition: transform 0.2s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card-body h5 {
-    color: #222;
-}
-
-.badge {
-    font-size: 0.9rem;
-}
-
-footer {
-    margin-top: 50px;
-    padding: 20px;
-    background-color: #fff;
-    border-top: 1px solid #ddd;
-}
-
-.offcanvas {
-    width: 250px;
-}
-
-.accordion-button::after {
-    color: white;
-}
-
-.accordion-item {
-    background-color: #343a40;
-    border: none;
-}
-
-.accordion-button {
-    background-color: #343a40;
-    color: #fff;
-}
-
-.accordion-button:not(.collapsed) {
-    background-color: #495057;
-}
-
-.accordion-body ul li a {
-    color: white;
-    text-decoration: none;
-}
-
-.accordion-body ul li a:hover {
-    background-color: #495057;
-    border-radius: 5px;
-}
-
-.btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-
-.btn-primary:hover {
-    background-color: #0b5ed7;
-}
-
-.btn-info {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
-}
-
-.btn-info:hover {
-    background-color: #31d2f2;
+.dropdown-header {
+    font-size: 14px;
 }
 
 .Options ul {
     display: flex;
     list-style: none;
-    gap: 40px;
+    gap: 50px; /* Espaciado entre los iconos */
     padding: 0;
 }
 
 .Options ul li a i {
     padding: 10px;
-    color: #333;
-    font-size: 24px;
+    color: black;
+    font-size: 25px; /* Tamaño de los iconos */
+}
+.section-a{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 40vh;
+
+}
+.imagen img{
+    width: 100%;
+    height: 40vh;
+}
+.shop{
+    padding:  100px 8%;
+}
+.container{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px,auto));
+    align-items: center;
+    gap: 2rem;
+    text-align: center;
+    cursor: pointer;
+    padding-top: 2rem;
+}
+.box{
+    background-color: white;
+    padding: 0px 20px 10px 20px;
+    box-shadow: 5px 30px 56.1276px rgb(55, 55, 55 /12%);
+    border-radius: 10px;
+    position: relative;
+    transition: all .35s ease;
+    transition: .3s;
+}
+.box img {
+    height: auto;
+    width: 100%;
+    border-bottom: 1px solid black;
+}
+.box h4{
+    font-size: 15px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.box h5{
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+.box .cart i{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 35px;
+    height: 35px;
+    background: black;
+    color: white;
+    display: inline-flex;
+    text-align: center;
+    justify-content: center;
+    font: 20px;
+}
+.box .cart li{  
+ list-style: none;
+}
+.box .cart li a{  
+    color: black;
+   text-decoration:none;
+}
+.box:hover{
+    transform: translateY(-5px);
+}
+footer{
+    border-top: 1px solid black;
+}
+/* Asegurar que el dropdown esté alineado correctamente */
+/* Asegurar que el dropdown tenga el ancho correcto */
+.dropdown-menu {
+    width: auto !important; 
+    min-width: 200px;
+    max-width: 250px;
+    text-align: left;
+    opacity: 0; /* Ocultarlo inicialmente */
+    transform: scale(0.8); /* Hacerlo más pequeño antes de desplegar */
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; /* Animación suave */
+}
+
+/* Cuando el dropdown se muestra, corregir el estilo */
+.dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: scale(1);
+}
+ /* Efectos en los botones del carrito */
+ .cart-btn:hover {
+    background-color: #0d6efd;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Efecto en productos */
+.product-card:hover {
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    transition: 0.3s;
 }

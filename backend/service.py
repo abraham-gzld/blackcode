@@ -50,6 +50,8 @@ def login():
                 return redirect(url_for("almacen"))
             elif rol == "Logistica":
                 return redirect(url_for("logistica")) 
+            if rol == "Logistica":
+                return redirect(url_for("logistica"))
         return "Usuario o Contraseña incorrectos", 401  
     return render_template("login.html")
 
@@ -64,15 +66,17 @@ def dashboard():
         print("❌ No hay usuario en sesión")
         return redirect(url_for('login'))
     
+
+
+
 @app.route("/almacen_view_pedidos")
 def almacen_view_pedidos():
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
+    # Obtener las ventas aceptadas
     query = "SELECT id, usuario_id, fecha, total, metodo_pago, status FROM venta WHERE status = 'Aceptada'"
     cursor.execute(query)
-
-    # Obtener los datos correctamente
     columnas = [col[0] for col in cursor.description]  
     ventas = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]  
 
@@ -81,7 +85,81 @@ def almacen_view_pedidos():
 
     return render_template("almacen_view_pedidos.html", ventas=ventas)
 
+@app.route("/detalle_venta/<int:venta_id>")
+def detalle_venta(venta_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
 
+    # Obtener detalles de la venta específica
+    query = """
+    SELECT a.nombre AS producto, v.cantidad, a.precio
+    FROM venta_detalle v
+    JOIN articulo a ON v.articulo_id = a.id
+    WHERE v.venta_id = %s
+    """
+    cursor.execute(query, (venta_id,))
+    
+    columnas = [col[0] for col in cursor.description]
+    detalles = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+
+    cursor.close()
+    conexion.close()
+
+    return jsonify(detalles)
+@app.route("/obtener_detalles/<int:venta_id>")
+def obtener_detalles(venta_id):
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        query = """
+            SELECT 
+                IFNULL(a.descripcion, 'Sin nombre') AS producto, 
+                IFNULL(v.cantidad, 0) AS cantidad, 
+                IFNULL(a.precio, 0.00) AS precio
+            FROM Venta_detalle v
+            JOIN Articulos a ON v.articulo_id = a.id
+            WHERE v.venta_id = %s
+        """
+        cursor.execute(query, (venta_id,))
+
+        # Obtener las columnas
+        columnas = [col[0] for col in cursor.description]
+        
+        # Convertir la respuesta a una lista de diccionarios
+        detalles = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+
+        cursor.close()
+        conexion.close()
+
+        if not detalles:
+            return jsonify({"error": "No se encontraron detalles"}), 404
+
+        return jsonify(detalles)  # ✅ Devuelve siempre JSON válido
+    except Exception as e:
+        print("Error en la API:", e)  # 👀 Para depuración en la terminal
+        return jsonify({"error": str(e)}), 500  # 🔴 Devuelve el error real para ver en la API
+
+@app.route('/finalizar_pedido', methods=['POST'])
+def finalizar_pedido():
+    try:
+        data = request.json
+        venta_id = data['venta_id']
+        usuario_id = data['usuario_id']  # Debes obtener el usuario logueado
+        
+        conn = obtener_conexion()
+        cursor = conn.cursor()
+
+        # Llamar al procedimiento almacenado
+        cursor.callproc('procesar_pedido', (venta_id, usuario_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": "Pedido procesado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/vendedor')
 def vendedor():
@@ -300,29 +378,24 @@ def logistica():
     conexion = obtener_conexion()
     cursor = conexion.cursor(pymysql.cursors.DictCursor)
 
-    # Obtener los pedidos de hoy en distribución
+    # Obtener los pedidos con estado "Procesando pedido"
     query = """
-        SELECT D.id AS distribucion_id,
-               D.venta_id,
-               V.usuario_id AS cliente_id,
+        SELECT V.id AS id,
                CONCAT(U.nombres, ' ', U.apellido_paterno) AS cliente,
-               U.calle,
-               U.colonia,
-               U.ciudad,
-               D.fecha_envio,
-               D.status
-        FROM Distribucion D
-        INNER JOIN Venta V ON D.venta_id = V.id
+               CONCAT(U.calle, ', ', U.colonia, ', ', U.ciudad) AS direccion,
+               V.status AS estatus
+        FROM Venta V
         INNER JOIN Usuarios U ON V.usuario_id = U.id
-        WHERE D.fecha_envio = CURDATE()
+        WHERE V.status = 'Procesando pedido'
     """
     cursor.execute(query)
-    distribuciones = cursor.fetchall()
+    pedidos = cursor.fetchall()
 
     cursor.close()
     conexion.close()
 
-    return render_template('logistica.html', username=session['username'], distribuciones=distribuciones)
+    return render_template('logistica.html', username=session['username'], pedidos=pedidos)
+
 
 @app.route("/vendedor_view_user")
 def vendedor_view_users():

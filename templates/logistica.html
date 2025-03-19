@@ -19,17 +19,9 @@
           <i class="bi bi-list" style="font-size: 25px;"></i>
         </button>
         <a class="navbar-brand">Logística</a>
-
-        <form class="d-flex flex-grow-1 justify-content-center" role="search">
-          <input class="form-control w-50 me-2" type="search" placeholder="Buscar Pedido" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Buscar</button>
-        </form>
-
+  
         <div class="Options d-flex align-items-center">
           <ul class="d-flex list-unstyled m-0 gap-3 align-items-center">
-            <li><a href="#"><i class="bi bi-truck"></i></a></li>
-            <li><a href="#"><i class="bi bi-check2-circle"></i></a></li>
-            
             <div class="flex-shrink-0 dropdown">
               <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <img src="https://github.com/mdo.png" alt="user" width="32" height="32" class="rounded-circle">
@@ -48,17 +40,14 @@
         </div>
       </div>
     </nav>
-
+  
     <!-- SIDEBAR -->
     <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="offcanvasSidebar">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title">Menú Logística</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
       </div>
-
       <div class="accordion p-3" id="logisticaMenu">
-
-        <!-- Pedidos en Ruta -->
         <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
           <h2 class="accordion-header">
             <button class="accordion-button bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#rutaCollapse">
@@ -73,8 +62,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Cambiar Estatus -->
         <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
           <h2 class="accordion-header">
             <button class="accordion-button bg-dark text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#estatusCollapse">
@@ -89,40 +76,65 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
-
+  
     <!-- CONTENIDO PRINCIPAL -->
+    <h2 class="mb-4" style="display: flex; justify-content: center;">Pedidos Procesando</h2>
     <div class="container mt-4">
 
-      <h2 class="mb-4">Pedidos en Ruta de Hoy</h2>
-
-      <!-- Grid de Pedidos -->
-      <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for pedido in pedidos %}
-        <div class="col">
-          <div class="card h-100 shadow">
-            <div class="card-body">
-              <h5 class="card-title">Pedido #{{ pedido.id }}</h5>
-              <p class="card-text"><strong>Cliente:</strong> {{ pedido.cliente }}</p>
-              <p class="card-text"><strong>Dirección:</strong> {{ pedido.direccion }}</p>
-              <p class="card-text"><strong>Estatus:</strong>
-                <span class="badge {% if pedido.estatus == 'En Ruta' %} bg-warning {% elif pedido.estatus == 'Entregado' %} bg-success {% else %} bg-secondary {% endif %}">
-                  {{ pedido.estatus }}
-                </span>
-              </p>
-              <div class="d-flex justify-content-between">
-                <a href="/logistica_actualizar_estatus/{{ pedido.id }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i> Cambiar Estatus</a>
-                <a href="/logistica_ver_detalle/{{ pedido.id }}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i> Ver Detalle</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
+      <table class="table table-bordered">
+        <thead class="table-dark">
+          <tr>
+            <th>ID Pedido</th>
+            <th>Cliente</th>
+            <th>Dirección</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pedido in pedidos %}
+          <tr>
+            <td>{{ pedido.id }}</td>
+            <td>{{ pedido.cliente }}</td>
+            <td>{{ pedido.direccion }}</td>
+            <td><span class="badge bg-secondary">{{ pedido.estatus }}</span></td>
+            <td>
+              <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalPedido" onclick="cargarDetalles('{{ pedido.id }}')">
+                <i class="bi bi-eye"></i> Ver Detalle
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
+    <!-- MODAL DETALLE PEDIDO -->
+    <div class="modal fade" id="modalPedido" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detalles del Pedido</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Artículo</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody id="detallePedido"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  
     <!-- FOOTER -->
     <footer class="py-3 my-4">
       <ul class="nav justify-content-center border-bottom pb-3 mb-3">
@@ -134,6 +146,7 @@
       </ul>
       <p class="text-center text-body-secondary">© 2024 BlackCode, Inc</p>
     </footer>
+    <script src="{{ url_for('static', filename='js/logistica.js') }}"></script>
 
   </body>
 </html>
