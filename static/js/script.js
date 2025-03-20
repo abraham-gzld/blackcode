@@ -9,3 +9,4 @@ singUpLink.addEventListener('click', ()=>{
 singInLink.addEventListener('click', ()=>{
     wrapper.classList.toggle('active')
 })
+

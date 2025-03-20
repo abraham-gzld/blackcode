@@ -109,29 +109,49 @@
                   </div>
               </div>
           </div>
-      </div>
-  
-      <h2 class="text-center mb-4">Artículos en Almacén</h2>
-      <!-- CONTENIDO PRINCIPAL -->
-      <div class="container mt-4">
-          <!-- Grid de Artículos -->
-          <div class="row row-cols-1 row-cols-md-3 g-4">
-              {% for articulo in articulos %}
-              <div class="col">
-                  <div class="card h-100 shadow">
-                      <div class="card-body">
-                          <h5 class="card-title">{{ articulo.descripcion }}</h5>
-                          <p class="card-text">Stock: {{ articulo.existencia }}</p>
-                          <div class="d-flex justify-content-between">
-                              <a href="/almacen_editar_articulo/{{ articulo.id }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i> Editar</a>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              {% endfor %}
-          </div>
-      </div>
-  
+    </div>
+    <h2 style="display: flex; justify-content: center; margin: 40px;">Editar Artículo</h2>
+    <div class="container mt-4">
+        <form action="{{ url_for('almacen_actualizar_articulo', id=articulo.id) }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label">Descripción</label>
+                <input type="text" name="descripcion" class="form-control" value="{{ articulo.descripcion }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Categoría ID</label>
+                <input type="number" name="categoria_id" class="form-control" value="{{ articulo.categoria_id }}" required readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Costo</label>
+                <input type="number" name="costo" class="form-control" value="{{ articulo.costo }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Precio</label>
+                <input type="number" name="precio" class="form-control" value="{{ articulo.precio }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Impuesto</label>
+                <input type="number" name="impuesto" class="form-control" value="{{ articulo.impuesto }}" required readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Existencia</label>
+                <input type="number" name="existencia" class="form-control" value="{{ articulo.existencia }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Estatus</label>
+                <select name="status" class="form-select">
+                    <option value="Activo" {% if articulo.status == 'Activo' %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if articulo.status == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Proveedor ID</label>
+                <input type="number" name="provedor_id" class="form-control" value="{{ articulo.provedor_id }}" required readonly>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{{ url_for('almacen') }}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
       <!-- FOOTER -->
       <footer class="py-3 my-4">
           <ul class="nav justify-content-center border-bottom pb-3 mb-3">

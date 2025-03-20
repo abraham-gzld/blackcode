@@ -8,6 +8,103 @@ app.secret_key = "tu_clave_secreta"
 app.secret_key
 import os
 
+@app.route('/almacen_editar_articulo/<int:id>')
+def almacen_actualizar_articulo(id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    query = """
+        SELECT id, descripcion, categoria_id, costo, precio, impuesto, existencia, status, provedor_id
+        FROM Articulos
+        WHERE id = %s
+    """
+    cursor.execute(query, (id,))
+    articulo = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    if not articulo:
+        flash('Artículo no encontrado', 'danger')
+        return redirect(url_for('almacen'))  # Redirige si el artículo no existe
+
+    return render_template('almacen_editar_articulo.html', articulo=articulo)
+
+@app.route('/almacen_editar_articulo/<int:id>', methods=['GET', 'POST'])
+def almacen_editar_articulo(id):
+    if 'username' not in session or session.get('rol') not in ['Administrador', 'Almacen']:
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('login'))
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        descripcion = request.form['descripcion']
+        categoria_id = request.form['categoria_id']
+        costo = request.form['costo']
+        precio = request.form['precio']
+        impuesto = request.form['impuesto']
+        existencia = request.form['existencia']
+        status = request.form['status']
+        proveedor_id = request.form['provedor_id']
+
+        # Actualizar en la BD
+        query = """
+            UPDATE Articulos
+            SET descripcion = %s, categoria_id = %s, costo = %s, precio = %s, 
+                impuesto = %s, existencia = %s, status = %s, provedor_id = %s
+            WHERE id = %s
+        """
+        valores = (descripcion, categoria_id, costo, precio, impuesto, existencia, status, proveedor_id, id)
+        cursor.execute(query, valores)
+        conexion.commit()
+
+        flash('Artículo actualizado correctamente', 'success')
+        return redirect(url_for('almacen'))
+
+    # Si es GET, obtener los datos del artículo para mostrarlos en el formulario
+    query = "SELECT * FROM Articulo WHERE id = %s"
+    cursor.execute(query, (id,))
+    articulo = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render_template('almacen_editar_articulo.html', articulo=articulo)
+
+
+
+@app.route('/logistica_actualizar_estatus/<int:id>', methods=['POST'])
+def logistica_actualizar_estatus(id):
+    if 'username' not in session or session.get('rol') not in ['Administrador', 'Logistica']:
+        return jsonify({'success': False, 'error': 'Acceso no autorizado'}), 403
+
+    data = request.get_json()
+    nuevo_estatus = data.get('estatus')
+
+    if not nuevo_estatus:
+        return jsonify({'success': False, 'error': 'Estatus inválido'}), 400
+
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        # Llamada al procedimiento almacenado con ID del pedido y nuevo estatus
+        cursor.callproc('sp_actualizar_estatus_pedido', (id, nuevo_estatus, session['username']))
+        
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return jsonify({'success': True, 'message': 'Estatus actualizado correctamente'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
 
 @app.route("/")
 def hello_word():
@@ -369,6 +466,25 @@ def almacen():
 
     return render_template('almacen.html', username=session['username'], articulos=articulos)
 
+
+@app.route('/logistica_bitacora/<int:pedido_id>')
+def logistica_bitacora(pedido_id):
+    # Aquí obtienes los datos de la bitácora del pedido
+    bitacora = obtener_bitacora_por_pedido(pedido_id)  
+    return render_template("bitacora_detalle.html", bitacora=bitacora)
+
+def obtener_bitacora_por_pedido(pedido_id):
+    # Conectar a la base de datos y obtener la bitácora del pedido
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    
+    query = "SELECT fecha, evento, detalles FROM bitacora WHERE pedido_id = %s ORDER BY fecha DESC"
+    cursor.execute(query, (pedido_id,))
+    bitacora = cursor.fetchall()
+    
+    return bitacora
+
+
 @app.route('/logistica')
 def logistica():
     if 'username' not in session or session.get('rol') not in ['Logistica', 'Administrador']:
@@ -380,13 +496,15 @@ def logistica():
 
     # Obtener los pedidos con estado "Procesando pedido"
     query = """
-        SELECT V.id AS id,
-               CONCAT(U.nombres, ' ', U.apellido_paterno) AS cliente,
-               CONCAT(U.calle, ', ', U.colonia, ', ', U.ciudad) AS direccion,
-               V.status AS estatus
-        FROM Venta V
-        INNER JOIN Usuarios U ON V.usuario_id = U.id
-        WHERE V.status = 'Procesando pedido'
+        SELECT 
+    V.id AS id,
+    CONCAT(U.nombres, ' ', U.apellido_paterno) AS cliente,
+    CONCAT(U.calle, ', ', U.colonia, ', ', U.ciudad) AS direccion,
+    V.status AS estatus
+FROM Venta V
+INNER JOIN Usuarios U ON V.usuario_id = U.id
+WHERE V.status IN ('Procesando pedido', 'Recolectando pedido', 'Pedido recogido', 'Pedido entregado', 'En Ruta');
+
     """
     cursor.execute(query)
     pedidos = cursor.fetchall()
@@ -395,6 +513,28 @@ def logistica():
     conexion.close()
 
     return render_template('logistica.html', username=session['username'], pedidos=pedidos)
+
+@app.route('/logistica_pedidos_recogidos')
+def logistica_pedidos_recogidos():
+    if 'username' not in session or session.get('rol') not in ['Administrador', 'Logistica']:
+        return jsonify({'success': False, 'error': 'Acceso no autorizado'}), 403
+
+    try:
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+        # Obtener solo los pedidos con estatus "Pedido recogido"
+        cursor.execute("SELECT * FROM Venta WHERE status = 'En Ruta'")
+        pedidos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return render_template('logistica_pedidos_recogidos.html', pedidos=pedidos)
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @app.route("/vendedor_view_user")

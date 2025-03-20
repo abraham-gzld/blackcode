@@ -4,6 +4,10 @@ VALUES
 
 INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
 VALUES 
+('jared@gmail.com', 'JaredF', '123', 'Logistica', 'Ventas', 'Jared', 'Leyva', 'Garcia', 'SAVL900101ABC', '80000', 'Av. Reforma', 10, 25, 'Centro', 'Culiacán', 'Activo');
+
+INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
+VALUES 
 ('carlossalas@gmail.com', 'samuelv', '123', 'Cliente', 'cliente', 'Carlos', 'Salas', 'Lopez', 'SAVL900101ABC', '80000', 'Av. Reforma', 10, 25, 'Centro', 'Culiacán', 'Activo');
 
 INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status) 
