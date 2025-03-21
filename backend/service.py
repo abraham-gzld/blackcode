@@ -164,6 +164,203 @@ def dashboard():
         return redirect(url_for('login'))
     
 
+@app.route('/ver_usuarios')
+def ver_usuarios():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM usuarios")
+    usuarios = cursor.fetchall()
+    conexion.close()
+    return render_template('ver_usuarios.html', usuarios=usuarios)
+
+@app.route('/usuarios/agregar', methods=['GET', 'POST'])
+def agregar_usuario():
+    if request.method == 'POST':
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+        rol = request.form['rol']
+        departamento = request.form['departamento']
+        nombres = request.form['nombres']
+        apellido_paterno = request.form['apellido_paterno']
+        apellido_materno = request.form['apellido_materno']
+        RFC = request.form['RFC']
+        codigo_postal = request.form['codigo_postal']
+        calle = request.form['calle']
+        numero_interior = request.form['numero_interior']
+        numero_exterior = request.form['numero_exterior']
+        colonia = request.form['colonia']
+        ciudad = request.form['ciudad']
+        status = request.form['status']
+
+        conexion = obtener_conexion()
+        cursor = conexion.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("""
+            INSERT INTO Usuarios (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (email, username, password, rol, departamento, nombres, apellido_paterno, apellido_materno, RFC, codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status))
+        
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        flash("Usuario agregado correctamente", "success")
+        return redirect(url_for('ver_usuarios'))
+
+    return render_template('agregar_usuario.html')
+
+@app.route('/usuarios/editar/<int:id>', methods=['GET'])
+def editar_usuario(id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM usuarios WHERE id = %s", (id,))
+    usuario = cursor.fetchone()
+    conexion.close()
+    return render_template('editar_usuario.html', usuario=usuario)
+
+@app.route('/usuarios/actualizar/<int:id>', methods=['POST'])
+def actualizar_usuario(id):
+    email = request.form['email']
+    username = request.form['username']
+    rol = request.form['rol']
+    nombres = request.form['nombres']
+    apellido_paterno = request.form['apellido_paterno']
+    apellido_materno = request.form['apellido_materno']
+    RFC = request.form['RFC']
+    codigo_postal = request.form['codigo_postal']
+    calle = request.form['calle']
+    numero_interior = request.form['numero_interior']
+    numero_exterior = request.form['numero_exterior']
+    colonia = request.form['colonia']
+    ciudad = request.form['ciudad']
+    status = request.form['status']
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    cursor.execute("""
+        UPDATE usuarios SET 
+            email = %s, username = %s, rol = %s, nombres = %s, apellido_paterno = %s, 
+            apellido_materno = %s, RFC = %s, codigo_postal = %s, calle = %s, 
+            numero_interior = %s, numero_exterior = %s, colonia = %s, ciudad = %s, status = %s
+        WHERE id = %s
+    """, (email, username, rol, nombres, apellido_paterno, apellido_materno, RFC, 
+          codigo_postal, calle, numero_interior, numero_exterior, colonia, ciudad, status, id))
+    
+    conexion.commit()
+    conexion.close()
+    return redirect(url_for('ver_usuarios'))
+
+
+@app.route('/usuarios/eliminar/<int:id>', methods=['GET'])
+def eliminar_usuario(id):
+    try:
+        conexion = obtener_conexion()
+        with conexion.cursor() as cursor:
+            cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
+        conexion.commit()
+        flash(f'Usuario con ID {id} eliminado correctamente', 'success')
+    except Exception as e:
+        conexion.rollback()
+        flash(f'Error al eliminar el usuario: {str(e)}', 'danger')
+    finally:
+        conexion.close()
+
+    return redirect(url_for('ver_usuarios'))  # Redirige a la lista de usuarios
+
+@app.route('/articulos')
+def ver_articulos():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM articulos")
+    articulos = cursor.fetchall()
+    conexion.close()
+    return render_template('articulos.html', articulos=articulos)
+
+@app.route('/articulos/agregar', methods=['GET', 'POST'])
+def agregar_articulo():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener las categorías desde la base de datos
+    cursor.execute("SELECT * FROM categorias_articulos")
+    categorias = cursor.fetchall()  # Recuperar los resultados como una lista de diccionarios
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        descripcion = request.form['descripcion']
+        precio = request.form['precio']
+        stock = request.form['stock']
+        imagen = request.form['imagen']
+        categoria_id = request.form['categoria']  # Obtener la categoría seleccionada
+
+        cursor.execute("""
+            INSERT INTO articulos (nombre, descripcion, precio, stock, imagen, categoria_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (nombre, descripcion, precio, stock, imagen, categoria_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        flash("Artículo agregado correctamente", "success")
+        return redirect(url_for('articulos'))
+
+    cursor.close()
+    conexion.close()
+
+    return render_template('agregar_articulo.html', categorias=categorias)
+
+
+@app.route('/articulos/editar/<int:id>', methods=['GET', 'POST'])
+def editar_articulo(id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener el artículo a editar
+    cursor.execute("SELECT * FROM articulos WHERE id = %s", (id,))
+    articulo = cursor.fetchone()
+
+    # Obtener todas las categorías
+    cursor.execute("SELECT * FROM categorias_articulos")
+    categorias = cursor.fetchall()
+
+    if request.method == 'POST':
+        descripcion = request.form['descripcion']
+        precio = request.form['precio']
+        stock = request.form['stock']
+        imagen = request.form['imagen']
+        categoria_id = request.form['categoria']
+
+        cursor.execute("""
+            UPDATE articulos 
+            SET  descripcion=%s, precio=%s, existencia=%s, imagen=%s, categoria_id=%s
+            WHERE id=%s
+        """, (descripcion, precio, stock, imagen, categoria_id, id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        flash("Artículo actualizado correctamente", "success")
+        return redirect(url_for('ver_articulos'))
+
+    cursor.close()
+    conexion.close()
+
+    return render_template('editar_articulo.html', articulo=articulo, categorias=categorias)
+
+
+@app.route('/articulos/eliminar/<int:id>', methods=['GET', 'POST'])
+def eliminar_articulo(id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("DELETE FROM articulos WHERE id = %s", (id,))
+    conexion.commit()
+
+    cursor.close()
+    conexion.close()
+
+    flash("Artículo eliminado correctamente", "success")
+    return redirect(url_for('ver_articulos'))
+
 
 
 @app.route("/almacen_view_pedidos")

@@ -69,7 +69,10 @@
                 <div id="usuariosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="/ver_usuarios" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-person-plus me-2"></i> Agregar Usuario</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-pencil me-2"></i> Modificar Usuario</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-trash me-2"></i> Eliminar Usuario</a></li>
                         </ul>
                     </div>
                 </div>
@@ -85,8 +88,10 @@
                 <div id="productosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="articulos" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
-                           
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-plus-circle me-2"></i> Agregar Producto</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-pencil me-2"></i> Modificar Producto</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-trash me-2"></i> Eliminar Producto</a></li>
                         </ul>
                     </div>
                 </div>
@@ -102,7 +107,9 @@
                 <div id="pedidosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Pedidos</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Pedidos</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-arrow-repeat me-2"></i> Actualizar Estado</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-x-circle me-2"></i> Cancelar Pedido</a></li>
                         </ul>
                     </div>
                 </div>
@@ -125,30 +132,118 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
+        </div>  
     </div>
-
-    <div class="shop">
-        <div class="container">
-            <div class="row">
-                {% for producto in productos %}
-                <div class="col-md-4">
-                    <div class="box text-center">
-                        <img src="{{ url_for('static', filename='img/' + producto['imagen']) }}" 
-                             alt="{{ producto['descripcion'] }}" class="img-fluid">
-                        <h4>{{ producto['descripcion'] }}</h4>
-                        <h5>${{ producto['precio'] }}</h5>
-                        <div class="cart">
-                            <i class="bi bi-basket3-fill"></i>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="card shadow-lg p-4 rounded">
+                    <h3 class="text-center text-primary">Agregar Nuevo Usuario</h3>
+                    <form action="{{ url_for('agregar_usuario') }}" method="post">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <input type="email" name="email" class="form-control" required>
                         </div>
-                    </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Username:</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Password:</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Rol:</label>
+                            <select name="rol" class="form-select">
+                                <option value="Cliente">Cliente</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Ventas">Ventas</option>
+                                <option value="Almacen">Almacén</option>
+                                <option value="Logistica">Logística</option>
+                                <option value="Proveedor">Proveedor</option>
+                                <option value="Administrador">Administrador</option>
+                            </select>
+                        </div>
+    
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombres:</label>
+                                <input type="text" name="nombres" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Departamento:</label>
+                                <input type="text" name="departamento" class="form-control">
+                            </div>
+                        </div>
+    
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido Paterno:</label>
+                                <input type="text" name="apellido_paterno" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido Materno:</label>
+                                <input type="text" name="apellido_materno" class="form-control" required>
+                            </div>
+                        </div>
+    
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">RFC:</label>
+                                <input type="text" name="RFC" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Código Postal:</label>
+                                <input type="text" name="codigo_postal" class="form-control">
+                            </div>
+                        </div>
+    
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Calle:</label>
+                                <input type="text" name="calle" class="form-control">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Número Interior:</label>
+                                <input type="number" name="numero_interior" class="form-control">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Número Exterior:</label>
+                                <input type="number" name="numero_exterior" class="form-control">
+                            </div>
+                        </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Colonia:</label>
+                            <input type="text" name="colonia" class="form-control">
+                        </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Ciudad:</label>
+                            <input type="text" name="ciudad" class="form-control">
+                        </div>
+    
+                        <div class="mb-3">
+                            <label class="form-label">Status:</label>
+                            <input type="text" name="status" class="form-control">
+                        </div>
+    
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+    
+                    </form>
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
-    </div>
+    
+
     <footer class="py-3 my-4">
         <ul class="nav justify-content-center border-bottom pb-3 mb-3">
           <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
