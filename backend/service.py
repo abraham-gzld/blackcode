@@ -1,7 +1,10 @@
+import datetime
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql, os 
 from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion
+from datetime import datetime
+
 
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"
@@ -149,8 +152,214 @@ def login():
                 return redirect(url_for("logistica")) 
             if rol == "Logistica":
                 return redirect(url_for("logistica"))
+            if rol == "Compras":
+                return redirect(url_for("compras"))
         return "Usuario o Contraseña incorrectos", 401  
     return render_template("login.html")
+@app.route('/compras', methods=['GET', 'POST'])
+def compras():
+    if 'username' in session:
+        username = session['username']
+        conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener proveedores y artículos
+    cursor.execute("SELECT * FROM Proveedores")
+    proveedores = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM Articulos")
+    articulos = cursor.fetchall()
+
+    if request.method == 'POST':
+        proveedor_id = request.form['proveedor']
+        usuario_id = 1  # Cambia esto por el usuario autenticado
+        fecha = datetime.now().strftime('%Y-%m-%d')
+        total = 0
+
+        # Insertar en la tabla Compra
+        cursor.execute("""
+            INSERT INTO Compra (proveedor_id, usuario_id, fecha, total, status)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (proveedor_id, usuario_id, fecha, total, 'Pendiente'))
+        conexion.commit()
+
+        compra_id = cursor.lastrowid
+        detalles = []
+
+        # Insertar en la tabla Detalle_Compra
+        for key, value in request.form.items():
+            if 'cantidad_' in key and int(value) > 0:
+                articulo_id = key.split('_')[1]
+                cantidad = int(value)
+
+                # Obtener precio del artículo
+                cursor.execute("SELECT costo FROM Articulos WHERE id = %s", (articulo_id,))
+                articulo = cursor.fetchone()
+                if articulo:
+                    subtotal = cantidad * articulo['costo']
+                    total += subtotal
+                    detalles.append((compra_id, articulo_id, cantidad, subtotal))
+
+        cursor.executemany("""
+            INSERT INTO Detalle_Compra (compra_id, articulo_id, cantidad, sub_total)
+            VALUES (%s, %s, %s, %s)
+        """, detalles)
+
+        # Actualizar el total en la compra
+        cursor.execute("UPDATE Compra SET total = %s WHERE id = %s", (total, compra_id))
+        conexion.commit()
+
+        flash("Compra realizada correctamente", "success")
+        return redirect(url_for('compras', username = username))
+      
+    else:
+        print("❌ No hay usuario en sesión")
+        return redirect(url_for('login'))
+    
+   
+
+    # Obtener compras existentes
+    cursor.execute("""
+    SELECT c.id, c.fecha, c.total, c.status, p.nombre AS proveedor, 
+           GROUP_CONCAT(a.descripcion, ' - ', d.cantidad, ' unidades' SEPARATOR '<br>') AS detalles
+    FROM Compra c
+    JOIN Proveedores p ON c.proveedor_id = p.id
+    JOIN Detalle_Compra d ON c.id = d.compra_id
+    JOIN Articulos a ON d.articulo_id = a.id
+    GROUP BY c.id
+    ORDER BY c.fecha DESC
+    """)
+    compras = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+    return render_template('compras.html', proveedores=proveedores, articulos=articulos, compras=compras)
+
+@app.route("/ver_compras")
+def ver_compras():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    
+    cursor.execute("""
+        SELECT c.id, c.fecha, c.total, c.status, 
+               p.nombre AS proveedor, 
+               a.descripcion AS articulo, 
+               d.cantidad 
+        FROM Compra c
+        JOIN Proveedores p ON c.proveedor_id = p.id
+        JOIN Detalle_Compra d ON c.id = d.compra_id
+        JOIN Articulos a ON d.articulo_id = a.id
+        ORDER BY c.fecha DESC
+    """)
+    compras = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()  # Asegurar que la conexión se cierra
+    return render_template("ver_compras.html", compras=compras)
+
+@app.route('/compras/cancelar/<int:compra_id>', methods=['POST'])
+def cancelar_compra(compra_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    # Verificar si la compra existe y su estado actual
+    cursor.execute("SELECT status FROM Compra WHERE id = %s", (compra_id,))
+    compra = cursor.fetchone()
+
+    if compra and compra[0] != 'Cancelado':
+        # Actualizar el estado de la compra a "Cancelado"
+        cursor.execute("UPDATE Compra SET status = 'Cancelado' WHERE id = %s", (compra_id,))
+        conexion.commit()
+        flash("Compra cancelada correctamente", "success")
+    else:
+        flash("La compra ya está cancelada o no existe", "danger")
+
+    cursor.close()
+    conexion.close()
+    return redirect(url_for('compras'))
+
+@app.route('/compras/aceptar/<int:compra_id>', methods=['POST'])
+def aceptar_compra(compra_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener los detalles de la compra
+    cursor.execute("""
+        SELECT articulo_id, cantidad 
+        FROM Detalle_Compra 
+        WHERE compra_id = %s
+    """, (compra_id,))
+    detalles = cursor.fetchall()
+
+    if not detalles:
+        flash("No se encontraron artículos en esta compra", "danger")
+        return redirect(url_for('compras'))
+
+    # Sumar las unidades a la columna 'existencia' en la tabla 'Articulos'
+    for detalle in detalles:
+        cursor.execute("""
+            UPDATE Articulos 
+            SET existencia = existencia + %s 
+            WHERE id = %s
+        """, (detalle['cantidad'], detalle['articulo_id']))
+
+    # Cambiar el estado de la compra a 'Aceptado'
+    cursor.execute("""
+        UPDATE Compra 
+        SET status = 'Aceptado' 
+        WHERE id = %s
+    """, (compra_id,))
+
+    conexion.commit()
+    cursor.close()
+    conexion.close()
+
+    flash("Compra aceptada y stock actualizado", "success")
+    return redirect(url_for('compras'))
+
+@app.route('/compras/agregar', methods=['POST'])
+def agregar_compra():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    proveedor_id = request.form['proveedor']
+    articulo_id = request.form['articulo']
+    cantidad = int(request.form['cantidad'])
+    usuario_id = 1  # Cambiar por el usuario autenticado
+    fecha = datetime.now().strftime('%Y-%m-%d')
+
+    # Insertar compra con total en 0 (se actualizará después)
+    cursor.execute("""
+        INSERT INTO Compra (proveedor_id, usuario_id, fecha, total, status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (proveedor_id, usuario_id, fecha, 0, 'Pendiente'))
+    conexion.commit()
+
+    compra_id = cursor.lastrowid
+
+    # Obtener precio del artículo según el proveedor
+    cursor.execute("SELECT costo FROM Articulos WHERE id = %s", (articulo_id,))
+    articulo = cursor.fetchone()
+
+    if articulo:
+        subtotal = cantidad * articulo['costo']
+        
+        # Insertar detalle de la compra
+        cursor.execute("""
+            INSERT INTO Detalle_Compra (compra_id, articulo_id, cantidad, sub_total)
+            VALUES (%s, %s, %s, %s)
+        """, (compra_id, articulo_id, cantidad, subtotal))
+
+        # Actualizar el total en la tabla Compra
+        cursor.execute("UPDATE Compra SET total = %s WHERE id = %s", (subtotal, compra_id))
+        conexion.commit()
+
+    cursor.close()
+    conexion.close()
+
+    flash("Pedido agregado correctamente", "success")
+    return redirect(url_for('compras'))
+
 
 @app.route('/dashboard')
 def dashboard():

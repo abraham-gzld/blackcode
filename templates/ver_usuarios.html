@@ -69,10 +69,8 @@
                 <div id="usuariosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-person-plus me-2"></i> Agregar Usuario</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-pencil me-2"></i> Modificar Usuario</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-trash me-2"></i> Eliminar Usuario</a></li>
+                            <li><a href="/ver_usuarios" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
+                           
                         </ul>
                     </div>
                 </div>
@@ -88,10 +86,8 @@
                 <div id="productosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-plus-circle me-2"></i> Agregar Producto</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-pencil me-2"></i> Modificar Producto</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-trash me-2"></i> Eliminar Producto</a></li>
+                            <li><a href="/articulos" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
+                           
                         </ul>
                     </div>
                 </div>
@@ -153,6 +149,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
+                        <th>Rol</th>
                         <th>Email</th>
                         <th>Acciones</th>
                     </tr>
@@ -162,6 +159,7 @@
                     <tr>
                         <td>{{ usuario.id }}</td>
                         <td>{{ usuario.nombres }}</td>
+                        <td>{{ usuario.rol }}</td>
                         <td>{{ usuario.email }}</td>
                         <td>
                             <a href="{{ url_for('editar_usuario', id=usuario.id) }}" class="btn btn-warning btn-sm">
