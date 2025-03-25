@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/view_dashboard.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackCode - Artículos</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="border-bottom: 1px solid black;">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <button class="btn btn-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                <i class="bi bi-list" style="font-size: 25px;"></i>
+            </button>
+            <a class="navbar-brand">BlackCode</a>
+
+            <form class="d-flex flex-grow-1 justify-content-center" role="search">
+                <input class="form-control w-50 me-2" type="search" placeholder="Buscar artículo..." aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Buscar</button>
+            </form>
+
+            <div class="Options d-flex align-items-center">
+                <ul class="d-flex list-unstyled m-0 gap-3 align-items-center">
+                    <li><a href="#"><i class="bi bi-basket3-fill"></i></a></li>
+                    <li><a href="#"><i class="bi bi-heart-fill"></i></a></li>
+                    
+                    <div class="flex-shrink-0 dropdown">
+                        <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow text-center" style="min-width: 200px;">
+                            <li class="dropdown-header">
+                                <b class="d-block">Bienvenido</b>
+                                <b><p class="mb-1 text-muted">{{ username }}</p></b>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/login">Sign out</a></li>
+                        </ul>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <h2 class="mb-4 text-center">Lista de Artículos</h2>
+
+    <!-- Barra de búsqueda -->
+    <div class="input-group mb-3">
+        <span class="input-group-text">🔍</span>
+        <input type="text" id="buscar" class="form-control" placeholder="Buscar artículo...">
+    </div>
+
+    <div class="container mt-5">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for articulo in articulos %}
+                    <tr>
+                        <td>{{ articulo.id }}</td>
+                        <td>{{ articulo.nombre }}</td>
+                        <td>{{ articulo.descripcion }}</td>
+                        <td>${{ articulo.precio }}</td>
+                        <td>
+                            <a href="{{ url_for('editar_articulo', id=articulo.id) }}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </a>
+                            <a href="{{ url_for('eliminar_articulo', id=articulo.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este artículo?')">Eliminar</a>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="/articulos/agregar" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Agregar Artículo
+            </a>
+        </div>
+    </div>
+
+    <footer class="py-3 my-4">
+        <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Features</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Pricing</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">FAQs</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
+        </ul>
+        <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
+    </footer>
+</body>
+</html>

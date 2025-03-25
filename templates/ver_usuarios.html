@@ -70,6 +70,7 @@
                     <div class="accordion-body">
                         <ul class="list-unstyled">
                             <li><a href="/ver_usuarios" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
+                           
                         </ul>
                     </div>
                 </div>
@@ -85,7 +86,7 @@
                 <div id="productosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="articulos" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
+                            <li><a href="/articulos" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
                            
                         </ul>
                     </div>
@@ -102,7 +103,9 @@
                 <div id="pedidosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
                     <div class="accordion-body">
                         <ul class="list-unstyled">
-                            <li><a href="/ver_compras" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Pedidos</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Pedidos</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-arrow-repeat me-2"></i> Actualizar Estado</a></li>
+                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-x-circle me-2"></i> Cancelar Pedido</a></li>
                         </ul>
                     </div>
                 </div>
@@ -125,29 +128,57 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
+        </div>  
+    </div>
+    
+
+    <h2 class="mb-4 text-center">Lista de Usuarios</h2>
+
+    <!-- Barra de búsqueda -->
+    <div class="input-group mb-3">
+        <span class="input-group-text">🔍</span>
+        <input type="text" id="buscar" class="form-control" placeholder="Buscar usuario...">
     </div>
 
-    <div class="shop">
-        <div class="container">
-            <div class="row">
-                {% for producto in productos %}
-                <div class="col-md-4">
-                    <div class="box text-center">
-                        <img src="{{ url_for('static', filename='img/' + producto['imagen']) }}" 
-                             alt="{{ producto['descripcion'] }}" class="img-fluid">
-                        <h4>{{ producto['descripcion'] }}</h4>
-                        <h5>${{ producto['precio'] }}</h5>
-                        <div class="cart">
-                            <i class="bi bi-basket3-fill"></i>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+    <div class="container mt-5">
+
+        
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Rol</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.nombres }}</td>
+                        <td>{{ usuario.rol }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>
+                            <a href="{{ url_for('editar_usuario', id=usuario.id) }}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </a>
+                            <a href="{{ url_for('eliminar_usuario', id=usuario.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="/usuarios/agregar" class="btn btn-success">
+                <i class="bi bi-person-plus"></i> Agregar Usuario
+            </a>
         </div>
-    </div>
+
+        
     </div>
     <footer class="py-3 my-4">
         <ul class="nav justify-content-center border-bottom pb-3 mb-3">
@@ -158,6 +189,6 @@
           <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
         </ul>
         <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
-      </footer>
+    </footer>
 </body>
 </html>
