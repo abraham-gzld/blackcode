@@ -489,33 +489,39 @@ def agregar_articulo():
     conexion = obtener_conexion()
     cursor = conexion.cursor(pymysql.cursors.DictCursor)
 
-    # Obtener las categorías desde la base de datos
+    # Obtener categorías y proveedores desde la base de datos
     cursor.execute("SELECT * FROM categorias_articulos")
-    categorias = cursor.fetchall()  # Recuperar los resultados como una lista de diccionarios
+    categorias = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM proveedores")  # Asegúrate de tener esta tabla
+    proveedores = cursor.fetchall()
 
     if request.method == 'POST':
-        nombre = request.form['nombre']
         descripcion = request.form['descripcion']
-        precio = request.form['precio']
-        stock = request.form['stock']
+        precio = float(request.form['precio'])  # Convertir a float
+        costo = float(request.form['costo'])  # Convertir a float
+        stock = int(request.form['stock'])  # Convertir a int
         imagen = request.form['imagen']
-        categoria_id = request.form['categoria']  # Obtener la categoría seleccionada
+        categoria_id = int(request.form['categoria'])  # Convertir a int
+        proveedor_id = int(request.form['id_proveedor'])  # Convertir a int
+        status = request.form['status']  # Puede ser un string o un número
 
         cursor.execute("""
-            INSERT INTO articulos (nombre, descripcion, precio, stock, imagen, categoria_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (nombre, descripcion, precio, stock, imagen, categoria_id))
+        INSERT INTO articulos (descripcion, precio, costo, existencia, imagen, categoria_id, provedor_id, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (descripcion, precio, costo, stock, imagen, categoria_id, proveedor_id, status))
 
         conexion.commit()
         cursor.close()
         conexion.close()
+        
         flash("Artículo agregado correctamente", "success")
-        return redirect(url_for('articulos'))
+        return redirect(url_for('ver_articulos'))  # Asegúrate de que esta función existe
 
     cursor.close()
     conexion.close()
+    return render_template('agregar_articulo.html', categorias=categorias, proveedores=proveedores)
 
-    return render_template('agregar_articulo.html', categorias=categorias)
 
 
 @app.route('/articulos/editar/<int:id>', methods=['GET', 'POST'])
