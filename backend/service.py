@@ -158,9 +158,12 @@ def login():
     return render_template("login.html")
 @app.route('/compras', methods=['GET', 'POST'])
 def compras():
-    if 'username' in session:
-        username = session['username']
-        conexion = obtener_conexion()
+    if 'username' not in session:
+        print("❌ No hay usuario en sesión")
+        return redirect(url_for('login'))
+
+    username = session['username']
+    conexion = obtener_conexion()
     cursor = conexion.cursor(pymysql.cursors.DictCursor)
 
     # Obtener proveedores y artículos
@@ -210,13 +213,7 @@ def compras():
         conexion.commit()
 
         flash("Compra realizada correctamente", "success")
-        return redirect(url_for('compras', username = username))
-      
-    else:
-        print("❌ No hay usuario en sesión")
-        return redirect(url_for('login'))
-    
-   
+        return redirect(url_for('compras'))
 
     # Obtener compras existentes
     cursor.execute("""
@@ -234,6 +231,80 @@ def compras():
     cursor.close()
     conexion.close()
     return render_template('compras.html', proveedores=proveedores, articulos=articulos, compras=compras)
+
+@app.route("/almacen_view_compras")
+def almacen_view_compras():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    
+    # Ejecutar consulta para obtener las compras/ventas desde la base de datos
+    cursor.execute("""
+        SELECT c.id, c.fecha, c.total, c.status, p.nombre AS proveedor, 
+               GROUP_CONCAT(a.descripcion, ' - ', d.cantidad, ' unidades' SEPARATOR '<br>') AS articulo, 
+               GROUP_CONCAT(d.cantidad SEPARATOR '<br>') AS cantidad
+        FROM Compra c
+        JOIN Proveedores p ON c.proveedor_id = p.id
+        JOIN Detalle_Compra d ON c.id = d.compra_id
+        JOIN Articulos a ON d.articulo_id = a.id
+        GROUP BY c.id
+        ORDER BY c.fecha DESC
+    """)
+    
+    compras = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()
+
+    return render_template("almacen_view_compras.html", compras=compras)
+
+
+@app.route("/almacen/agregar/<int:compra_id>", methods=["POST"])
+def agregar_a_almacen(compra_id):
+    # Conectar a la base de datos
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    
+    # Obtener la información de la compra
+    cursor.execute("SELECT * FROM Compra WHERE id = %s", (compra_id,))
+    compra = cursor.fetchone()
+    
+    if compra:
+        # Obtener los detalles de la compra (artículos y cantidades)
+        cursor.execute("""
+            SELECT d.articulo_id, d.cantidad
+            FROM Detalle_Compra d
+            WHERE d.compra_id = %s
+        """, (compra_id,))
+        detalles = cursor.fetchall()
+        
+        # Procesar cada artículo y agregar la cantidad al almacén
+        for detalle in detalles:
+            articulo_id = detalle['articulo_id']
+            cantidad = detalle['cantidad']
+            
+            # Actualizar la existencia del artículo sumando la cantidad
+            cursor.execute("""
+                UPDATE Articulos
+                SET existencia = existencia + %s
+                WHERE id = %s
+            """, (cantidad, articulo_id))
+        
+        # Cambiar el estado de la compra a "Aceptada" (si es necesario)
+        cursor.execute("UPDATE Compra SET status = %s WHERE id = %s", ('Aceptada', compra_id))
+        
+        # Confirmar los cambios
+        conexion.commit()
+
+        flash("Artículo(s) agregado(s) al almacén correctamente", "success")
+    else:
+        flash("Compra no encontrada", "danger")
+
+    # Cerrar la conexión y redirigir a la página de compras
+    cursor.close()
+    conexion.close()
+
+    return redirect(url_for('almacen_view_compras'))
+
 
 @app.route("/ver_compras")
 def ver_compras():

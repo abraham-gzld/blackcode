@@ -140,7 +140,6 @@
                     <th>Fecha</th>
                     <th>Proveedor</th>
                     <th>Artículo</th>
-                    <th>Cantidad</th>
                     <th>Total</th>
                 </tr>
             </thead>
@@ -151,7 +150,6 @@
                     <td>{{ compra.fecha }}</td>
                     <td>{{ compra.proveedor }}</td>
                     <td>{{ compra.detalles | safe }}</td>
-                    <td>{{ compra.cantidad }}</td>
                     <td>{{ compra.total }}</td>
                 </tr>
                 {% endfor %}
