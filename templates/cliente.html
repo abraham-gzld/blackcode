@@ -96,16 +96,22 @@
         </div>
     </div>
 
-    <!-- Productos -->
-    <div class="container my-5">
+     <!-- Productos -->
+     <div class="container my-5">
         <div class="row">
             {% for producto in productos %}
             <div class="col-md-4">
                 <div class="card product-card">
-                    <img src="{{ url_for('static', filename='img/' + producto['imagen']) }}" class="card-img-top" alt="{{ producto['descripcion'] }}" style="height: 400px; width: auto;">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">{{ producto['descripcion'] }}</h5>
-                        <p class="card-text fw-bold">${{ producto['precio'] }}</p>
+                    <!-- Enlace a la página de detalle -->
+                    <a href="{{ url_for('producto_detalle', producto_id=producto['id']) }}" class="text-decoration-none text-dark">
+                        <img src="{{ url_for('static', filename='img/' + producto['imagen']) }}" class="card-img-top" alt="{{ producto['descripcion'] }}" style="height: 400px; width: auto;">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ producto['descripcion'] }}</h5>
+                            <p class="card-text fw-bold">${{ producto['precio'] }}</p>
+                        </div>
+                    </a>
+                    <!-- Botón para agregar al carrito -->
+                    <div class="card-footer text-center bg-white">
                         <form action="{{ url_for('agregar_carrito', id=producto['id']) }}" method="post">
                             <button type="submit" class="btn btn-outline-primary cart-btn">
                                 <i class="bi bi-basket3-fill"></i> Añadir al carrito
@@ -117,7 +123,7 @@
             {% endfor %}
         </div>
     </div>
-
+    
     <!-- Footer -->
     <footer class="py-3 my-4 text-center">
         <p class="text-body-secondary">© 2024 BlackCode, Inc</p>

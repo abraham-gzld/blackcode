@@ -29,7 +29,7 @@ def almacen_actualizar_articulo(id):
 
     if not articulo:
         flash('Artículo no encontrado', 'danger')
-        return redirect(url_for('almacen'))  # Redirige si el artículo no existe
+        return redirect(url_for('almacen'))  
 
     return render_template('almacen_editar_articulo.html', articulo=articulo)
 
@@ -107,11 +107,34 @@ def logistica_actualizar_estatus(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/producto/<int:producto_id>')
+def producto_detalle(producto_id):
+    conexion = obtener_conexion()
+    with conexion.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("SELECT * FROM articulos WHERE id = %s", (producto_id,))
+        producto = cursor.fetchone()
+
+    if producto is None:
+        return "Producto no encontrado", 404
+    
+    username = session.get('username', None)
+
+    return render_template('producto_detalle.html', producto=producto, username= username)
+
+
 
 
 @app.route("/")
 def hello_word():
-    return render_template("index.html")
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener productos de la BDD
+    cursor.execute("SELECT * FROM Articulos WHERE categoria_id = 2")
+    productos = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+    return render_template("index.html", productos = productos)
 
 @app.route('/carrito')
 def ver_carrito():
