@@ -1184,7 +1184,10 @@ def procesar_pago():
     if not metodo_pago:
         return jsonify({'success': False, 'message': 'Método de pago no especificado'}), 400
 
-    # 🔒 Validar datos si es tarjeta
+    # 🛒 Total del carrito
+    carrito = session['carrito']
+    total = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
+
     if metodo_pago == 'Tarjeta':
         num_tarjeta = request.form.get('num_tarjeta')
         nombre_titular = request.form.get('nombre_titular')
@@ -1198,22 +1201,26 @@ def procesar_pago():
         cursor_banco = conexion_banco.cursor()
 
         cursor_banco.execute("""
-            SELECT * FROM tarjetas 
+            SELECT saldo FROM tarjetas 
             WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
         """, (num_tarjeta, nombre_titular, cvv, fecha_exp))
 
         tarjeta = cursor_banco.fetchone()
-        cursor_banco.close()
-        conexion_banco.close()
 
         if not tarjeta:
+            cursor_banco.close()
+            conexion_banco.close()
             return jsonify({'success': False, 'message': 'Tarjeta no válida o no registrada'}), 400
 
-    # 🛒 Procesar venta
-    status = "Pendiente"
-    carrito = session['carrito']
-    total = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
+        saldo_actual = float(tarjeta[0])
 
+        if saldo_actual < total:
+            cursor_banco.close()
+            conexion_banco.close()
+            return jsonify({'success': False, 'message': 'Saldo insuficiente'}), 400
+
+    # Procesar venta
+    status = "Pendiente"
     detalles_venta = [
         {
             "articulo_id": int(id),
@@ -1230,6 +1237,15 @@ def procesar_pago():
         cursor.execute("SELECT LAST_INSERT_ID()")
         venta_id = cursor.fetchone()[0]
 
+        # ✅ Descontar saldo si pagó con tarjeta
+        if metodo_pago == 'Tarjeta':
+            nuevo_saldo = saldo_actual - total
+            cursor_banco.execute("""
+                UPDATE tarjetas SET saldo = %s 
+                WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
+            """, (nuevo_saldo, num_tarjeta, nombre_titular, cvv, fecha_exp))
+            conexion_banco.commit()
+
         conexion.commit()
         session['carrito'] = {}
         session.modified = True
@@ -1238,11 +1254,17 @@ def procesar_pago():
 
     except Exception as e:
         conexion.rollback()
+        if metodo_pago == 'Tarjeta':
+            conexion_banco.rollback()
         return jsonify({'success': False, 'message': f"Error en la compra: {str(e)}"}), 500
 
     finally:
         cursor.close()
         conexion.close()
+        if metodo_pago == 'Tarjeta':
+            cursor_banco.close()
+            conexion_banco.close()
+
 
 
 @app.route('/pedidos')
