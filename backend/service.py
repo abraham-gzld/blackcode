@@ -11,6 +11,50 @@ app.secret_key = "tu_clave_secreta"
 app.secret_key
 import os
 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+
+        query = "SELECT email, password, username, rol FROM usuarios WHERE email = %s AND password = %s"
+        cursor.execute(query, (email, password))
+        usuario = cursor.fetchone()
+
+        cursor.close()
+        conexion.close()
+
+        if usuario:
+            email, password, username, rol = usuario  # 🔹 Desempaquetado corregido
+            
+            session["usuario"] = email  
+            session["username"] = username  
+            session["rol"] = rol  
+
+            if rol == "Administrador":
+                return redirect(url_for("dashboard"))
+            elif rol == "Cliente":
+                return redirect(url_for("cliente"))
+            elif rol == "Ventas":
+                return redirect(url_for("vendedor"))
+            elif rol == "Almacen":
+                return redirect(url_for("almacen"))
+            elif rol == "Logistica":
+                return redirect(url_for("logistica")) 
+            if rol == "Logistica":
+                return redirect(url_for("logistica"))
+            if rol == "Compras":
+                return redirect(url_for("compras"))
+            if rol == "RH":
+                return redirect(url_for("nominas"))
+        return "Usuario o Contraseña incorrectos", 401  
+    return render_template("login.html")
+
+
 @app.route('/almacen_editar_articulo/<int:id>')
 def almacen_actualizar_articulo(id):
     conexion = obtener_conexion()
@@ -140,45 +184,6 @@ def hello_word():
 def ver_carrito():
     return render_template('carrito.html')
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
-
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-
-        query = "SELECT email, password, username, rol FROM usuarios WHERE email = %s AND password = %s"
-        cursor.execute(query, (email, password))
-        usuario = cursor.fetchone()
-
-        cursor.close()
-        conexion.close()
-
-        if usuario:
-            email, password, username, rol = usuario  # 🔹 Desempaquetado corregido
-            
-            session["usuario"] = email  
-            session["username"] = username  
-            session["rol"] = rol  
-
-            if rol == "Administrador":
-                return redirect(url_for("dashboard"))
-            elif rol == "Cliente":
-                return redirect(url_for("cliente"))
-            elif rol == "Ventas":
-                return redirect(url_for("vendedor"))
-            elif rol == "Almacen":
-                return redirect(url_for("almacen"))
-            elif rol == "Logistica":
-                return redirect(url_for("logistica")) 
-            if rol == "Logistica":
-                return redirect(url_for("logistica"))
-            if rol == "Compras":
-                return redirect(url_for("compras"))
-        return "Usuario o Contraseña incorrectos", 401  
-    return render_template("login.html")
 @app.route('/compras', methods=['GET', 'POST'])
 def compras():
     if 'username' not in session:
