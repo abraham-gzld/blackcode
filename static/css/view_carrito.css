@@ -120,3 +120,13 @@ footer{
     opacity: 1;
     transform: scale(1);
 }
+
+   /* Transición para el cambio de tamaño */
+   .form-control {
+    transition: all 0.3s ease-in-out; /* Transición suave */
+}
+
+.form-control:focus {
+    border-color: #80bdff; /* Cambio en el borde al hacer focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Resaltar el campo al hacer focus */
+}

@@ -2,7 +2,7 @@ import datetime
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql, os 
 from werkzeug.utils import secure_filename
-from conexionBD import obtener_conexion
+from conexionBD import obtener_conexion, obtener_conexion_banco
 from datetime import datetime
 
 
@@ -1112,10 +1112,10 @@ def agregar_carrito(id):
 
     # Accede a los valores con claves en lugar de índices
     if str(id) in carrito:
-        carrito[str(id)]['cantidad'] += 1  # Si ya está en el carrito, incrementa la cantidad
+        carrito[str(id)]['cantidad'] += 1 
     else:
         carrito[str(id)] = {
-            'descripcion': producto['descripcion'],  # 🔹 Ahora accede con clave
+            'descripcion': producto['descripcion'],  
             'precio': producto['precio'],
             'imagen': producto['imagen'],
             'cantidad': 1
@@ -1128,55 +1128,87 @@ def agregar_carrito(id):
 # Carrito
 @app.route('/ver_carrito')
 def mostrar_carrito():
-    carrito = session.get('carrito', {})  # Obtiene el carrito de la sesión o un diccionario vacío
-    return render_template('carrito.html', carrito=carrito)
+    if 'username' in session:
+        username = session['username']
+        carrito = session.get('carrito', {})  # Obtiene el carrito de la sesión o un diccionario vacío
+        username = session.get('username')  # Obtener el usuario logueado si existe
+        return render_template('carrito.html', carrito=carrito, username=username)
+    else:
+        print("❌ No hay usuario en sesión")
+        return redirect(url_for('login'))
+
 
 @app.route('/eliminar_carrito/<int:id>', methods=['POST'])
 def eliminar_carrito(id):
-    carrito = session.get('carrito', {})  
-    id_str = str(id)  
-
+    carrito = session.get('carrito', {})
+    id_str = str(id)
+    print(f"Carrito antes de eliminar el id {id}:", carrito)  # Log antes de eliminar
     if id_str in carrito:
-        del carrito[id_str]  # Eliminar el producto del carrito
-        session['carrito'] = carrito  
-        session.modified = True  
-
+        del carrito[id_str]
+        session['carrito'] = carrito
+        session.modified = True
+        print(f"Carrito después de eliminar el id {id}:", carrito)  # Log después de eliminar
+    else:
+        print(f"El id {id} no estaba en el carrito")
     return jsonify({'success': True})
+
 
 
 @app.route('/procesar_pago', methods=['POST'])
 def procesar_pago():
     if 'carrito' not in session or not session['carrito']:
         return jsonify({'success': False, 'message': 'El carrito está vacío'}), 400
-    
+
     if 'usuario' not in session:
         return jsonify({'success': False, 'message': 'Usuario no autenticado'}), 401
 
-    cliente_email = session['usuario']  
-
+    cliente_email = session['usuario']
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    # Obtener el ID del usuario a partir del email
-    query_usuario = "SELECT id FROM usuarios WHERE email = %s"
-    cursor.execute(query_usuario, (cliente_email,))
+    cursor.execute("SELECT id FROM usuarios WHERE email = %s", (cliente_email,))
     usuario = cursor.fetchone()
-
     if not usuario:
         cursor.close()
         conexion.close()
         return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
 
     usuario_id = usuario[0]
-    
-    # Datos de la venta
-    metodo_pago = "Tarjeta"  
+    metodo_pago = request.form.get('metodo_pago')
+
+    if not metodo_pago:
+        return jsonify({'success': False, 'message': 'Método de pago no especificado'}), 400
+
+    # 🔒 Validar datos si es tarjeta
+    if metodo_pago == 'Tarjeta':
+        num_tarjeta = request.form.get('num_tarjeta')
+        nombre_titular = request.form.get('nombre_titular')
+        cvv = request.form.get('cvv')
+        fecha_exp = request.form.get('fecha_exp')
+
+        if not all([num_tarjeta, nombre_titular, cvv, fecha_exp]):
+            return jsonify({'success': False, 'message': 'Datos de tarjeta incompletos'}), 400
+
+        conexion_banco = obtener_conexion_banco()
+        cursor_banco = conexion_banco.cursor()
+
+        cursor_banco.execute("""
+            SELECT * FROM tarjetas 
+            WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
+        """, (num_tarjeta, nombre_titular, cvv, fecha_exp))
+
+        tarjeta = cursor_banco.fetchone()
+        cursor_banco.close()
+        conexion_banco.close()
+
+        if not tarjeta:
+            return jsonify({'success': False, 'message': 'Tarjeta no válida o no registrada'}), 400
+
+    # 🛒 Procesar venta
     status = "Pendiente"
-    
     carrito = session['carrito']
     total = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
 
-    # Crear JSON para `p_data`
     detalles_venta = [
         {
             "articulo_id": int(id),
@@ -1185,33 +1217,28 @@ def procesar_pago():
         }
         for id, producto in carrito.items()
     ]
-
-    detalles_json = json.dumps(detalles_venta)  # Convertir a JSON
+    detalles_json = json.dumps(detalles_venta)
 
     try:
-        # Llamar al procedimiento almacenado
         cursor.callproc("InsertarVentaConDetalles", 
-            (usuario_id, total, metodo_pago, status, detalles_json))
-        
-        # Obtener el ID de la venta insertada
+                        (usuario_id, total, metodo_pago, status, detalles_json))
         cursor.execute("SELECT LAST_INSERT_ID()")
         venta_id = cursor.fetchone()[0]
 
         conexion.commit()
-
-        session['carrito'] = {}  # Vaciar el carrito después de la compra
+        session['carrito'] = {}
         session.modified = True
-        mensaje = f"Compra realizada con éxito."
+
+        return jsonify({'success': True, 'message': 'Pago realizado con éxito', 'venta_id': venta_id})
 
     except Exception as e:
         conexion.rollback()
-        mensaje = f"Error en la compra: {str(e)}"
+        return jsonify({'success': False, 'message': f"Error en la compra: {str(e)}"}), 500
 
     finally:
         cursor.close()
         conexion.close()
 
-    return jsonify({'success': True, 'message': mensaje, 'venta_id': venta_id})
 
 @app.route('/pedidos')
 def ver_pedidos():
@@ -1297,7 +1324,6 @@ def aceptar_venta(venta_id, usuario_id):
         print(f"Error: {err}")
     finally:
         conexion.close()
-
 
 @app.route('/actualizar_estado_venta/<int:venta_id>', methods=['POST'])
 def actualizar_estado_venta(venta_id):

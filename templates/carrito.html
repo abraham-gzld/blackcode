@@ -96,23 +96,114 @@
                 </div>
             </div>
 
-            <!-- Resumen del pedido -->
             <div class="col-md-4">
                 <div class="card p-3 shadow">
-                    <h4>Resumen del Pedido</h4>
+                    <h4 class="text-center">Resumen del Pedido</h4>
                     <hr>
-                    <p><b>Subtotal:</b> $<span id="subtotal">0.00</span></p>
-                    <p><b>Impuesto (16%):</b> $<span id="impuesto">0.00</span></p>
+                    <p><b>Subtotal:</b> $<span id="subtotal">500.00</span></p>
+                    <p><b>Impuesto (16%):</b> $<span id="impuesto">80.00</span></p>
                     <hr>
-                    <h5><b>Total:</b> $<span id="total">0.00</span></h5>
+                    <h5><b>Total:</b> $<span id="total">580.00</span></h5>
                     <hr>
-                    <a href="{{ url_for('cliente') }}" class="btn btn-primary w-100 mb-2">🛍️ Volver a la tienda</a>
-                    <button class="btn btn-success w-100">💳 Procesar pago</button>
+                    
+                    
+
+                    <form method="POST" action="{{ url_for('procesar_pago') }}" id="form-pago">
+                        <h5 class="mt-3">Método de pago</h5>
+            
+                        <!-- Método Tarjeta -->
+                        <div class="border rounded p-3 mb-3 metodo-opcion">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="tarjeta" value="Tarjeta" required>
+                                <label class="form-check-label fw-bold" for="tarjeta">
+                                    💳 Tarjeta de crédito o débito
+                                </label>
+                            </div>
+                            <div id="campos-tarjeta" class="mt-3" style="display: none;">
+                                <input type="text" class="form-control mb-2" name="num_tarjeta" placeholder="Número de tarjeta" required>
+                                <input type="text" class="form-control mb-2" name="nombre_titular" placeholder="Nombre del titular" required>
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control" name="fecha_exp" placeholder="MM/AA" required>
+                                    <input type="text" class="form-control" name="cvv" placeholder="CVV" required>
+                                </div>
+                            </div>
+                        </div>
+            
+                        <!-- Método OXXO -->
+                        <div class="border rounded p-3 mb-3 metodo-opcion">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="oxxo" value="OXXO">
+                                <label class="form-check-label fw-bold" for="oxxo">
+                                    🧾 Pago en OXXO
+                                </label>
+                            </div>
+                            <div id="mensaje-oxxo" class="mt-2 text-muted" style="display: none;">
+                                Recibirás un ticket con código para pagar en cualquier tienda OXXO.
+                            </div>
+                        </div>
+            
+                        <!-- Método PayPal -->
+                        <div class="border rounded p-3 mb-3 metodo-opcion">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="paypal" value="PayPal">
+                                <label class="form-check-label fw-bold" for="paypal">
+                                    🅿️ PayPal
+                                </label>
+                            </div>
+                            <div id="mensaje-paypal" class="mt-2 text-muted" style="display: none;">
+                                Serás redirigido a la pasarela de pago PayPal para completar tu compra.
+                            </div>
+                        </div>
+
+                        <!-- Sección nueva: Método de Envío -->
+                        <h5 class="mt-4">Método de Envío</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_envio" id="envio-gratis" value="Gratis" disabled>
+                            <label class="form-check-label" for="envio-gratis">
+                                🆓 Envío Gratis
+                            </label>
+                        </div>
+                        <div id="mensaje-envio-gratis" class="mt-2 text-muted" style="display: none;">
+                            El envío será gratuito ya que el total es mayor a $1000.
+                        </div>
+                        <div id="form-gratis-envio" class="mt-3" style="display: none;">
+                            <input type="text" class="form-control" name="ciudad_origen" placeholder="Ciudad de origen" required>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_envio" id="envio-estandar" value="Estandar">
+                            <label class="form-check-label" for="envio-estandar">
+                                🚚 Envío Estándar (5-7 días)
+                            </label>
+                        </div>
+                        <hr>
+                        <a href="{{ url_for('cliente') }}" class="btn btn-primary w-100 mb-2">🛍️ Volver a la tienda</a>
+                        <button type="button" class="btn btn-success w-100" id="btnProcesar">💳 Procesar pago</button>
+                    </form>
                 </div>
-            </div>
-        </div>
+            </div> 
     </div>
 
+    <!-- Modal de Carga -->
+    <div class="modal fade" id="modalCargando" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 fw-bold">Procesando pago, por favor espera...</p>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div class="modal fade" id="modalResultado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4" id="resultadoContenido">
+        <!-- Contenido se inyecta dinámicamente -->
+        </div>
+    </div>
+    </div>
+
+    
     <script src="{{url_for('static', filename='js/carrito.js')}}"></script>
 </body>
 </html>
