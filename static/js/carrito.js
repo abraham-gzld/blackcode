@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
-            ocultarTodo();  // Ocultar todos los campos antes de mostrar el que corresponde
+            ocultarTodo();  
 
             if (radio.value === 'Tarjeta') {
                 camposTarjeta.style.display = 'block';  // Mostrar campos de tarjeta

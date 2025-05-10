@@ -1135,12 +1135,18 @@ def agregar_carrito(id):
 def mostrar_carrito():
     if 'username' in session:
         username = session['username']
-        carrito = session.get('carrito', {})  # Obtiene el carrito de la sesión o un diccionario vacío
-        username = session.get('username')  # Obtener el usuario logueado si existe
-        return render_template('carrito.html', carrito=carrito, username=username)
+        carrito = session.get('carrito', {})
+
+        conexion = obtener_conexion()
+        with conexion.cursor() as cursor:
+            cursor.execute("SELECT estado_destino FROM costos_envio ORDER BY estado_destino")
+            estados = [fila[0] for fila in cursor.fetchall()]
+
+        return render_template('carrito.html', carrito=carrito, username=username, estados=estados)
     else:
         print("❌ No hay usuario en sesión")
         return redirect(url_for('login'))
+
 
 
 @app.route('/eliminar_carrito/<int:id>', methods=['POST'])
