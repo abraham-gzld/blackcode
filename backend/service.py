@@ -1139,13 +1139,16 @@ def mostrar_carrito():
 
         conexion = obtener_conexion()
         with conexion.cursor() as cursor:
-            cursor.execute("SELECT estado_destino FROM costos_envio ORDER BY estado_destino")
-            estados = [fila[0] for fila in cursor.fetchall()]
+            cursor.execute("SELECT estado_destino, costo FROM costos_envio ORDER BY estado_destino")
+            resultados = cursor.fetchall()
+            estados = [fila[0] for fila in resultados]
+            costos_envio = {fila[0]: float(fila[1]) for fila in resultados}
 
-        return render_template('carrito.html', carrito=carrito, username=username, estados=estados)
+        return render_template('carrito.html', carrito=carrito, username=username, estados=estados, costos_envio=costos_envio)
     else:
         print("❌ No hay usuario en sesión")
         return redirect(url_for('login'))
+
 
 
 
@@ -1176,7 +1179,6 @@ def procesar_pago():
     cliente_email = session['usuario']
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-
     cursor.execute("SELECT id FROM usuarios WHERE email = %s", (cliente_email,))
     usuario = cursor.fetchone()
     if not usuario:
@@ -1251,6 +1253,8 @@ def procesar_pago():
                 WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
             """, (nuevo_saldo, num_tarjeta, nombre_titular, cvv, fecha_exp))
             conexion_banco.commit()
+
+        
 
         conexion.commit()
         session['carrito'] = {}

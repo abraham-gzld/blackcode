@@ -5,11 +5,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const mensajeOxxo = document.getElementById('mensaje-oxxo');
     const mensajePaypal = document.getElementById('mensaje-paypal');
     const form = document.getElementById('form-pago');
+    const envioEstandarRadio = document.getElementById('envio-estandar');
+    const formEnvioEstandar = document.getElementById('form-envio-estandar');
 
+
+    const estadoSelect = document.getElementById('estado');
+    const envioSpan = document.getElementById('envio');
+    const subtotalSpan = document.getElementById('subtotal');
+    const impuestoSpan = document.getElementById('impuesto');
+    const totalSpan = document.getElementById('total');
+
+    estadoSelect.addEventListener('change', function () {
+        const estado = this.value;
+        const costoEnvio = costosEnvio[estado] || 0;
+        envioSpan.textContent = costoEnvio.toFixed(2);
+
+        const subtotal = parseFloat(subtotalSpan.textContent);
+        const impuesto = parseFloat(impuestoSpan.textContent);
+        const total = subtotal + impuesto + costoEnvio;
+        totalSpan.textContent = total.toFixed(2);
+    });
+
+    envioEstandarRadio.addEventListener('change', function () {
+        if (envioEstandarRadio.checked) {
+            formEnvioEstandar.style.display = 'block';
+        }
+    });
+
+// Ocultar si se selecciona otro método de envío
+    document.querySelectorAll('input[name="metodo_envio"]').forEach(radio => {
+        if (radio.id !== 'envio-estandar') {
+            radio.addEventListener('change', () => {
+                formEnvioEstandar.style.display = 'none';
+            });
+        }
+    });
     function ocultarTodo() {
         camposTarjeta.style.display = 'none';  // Ocultar campos de tarjeta
         mensajeOxxo.style.display = 'none';   // Ocultar mensaje de OXXO
         mensajePaypal.style.display = 'none'; // Ocultar mensaje de PayPal
+        
 
         camposTarjeta.querySelectorAll('input').forEach(input => {
             input.required = false;
