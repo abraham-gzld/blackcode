@@ -1166,6 +1166,19 @@ def eliminar_carrito(id):
         print(f"El id {id} no estaba en el carrito")
     return jsonify({'success': True})
 
+@app.route('/actualizar_carrito', methods=['POST'])
+def actualizar_carrito():
+    data = request.get_json()
+    producto_id = str(data.get('id'))
+    nueva_cantidad = int(data.get('cantidad'))
+
+    if 'carrito' in session and producto_id in session['carrito']:
+        session['carrito'][producto_id]['cantidad'] = nueva_cantidad
+        session.modified = True
+        return {'status': 'ok'}
+    else:
+        return {'status': 'error', 'message': 'Producto no encontrado en el carrito'}, 404
+
 
 
 @app.route('/procesar_pago', methods=['POST'])

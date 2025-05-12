@@ -1,5 +1,5 @@
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Mostrar los campos según el método de pago
     const radios = document.querySelectorAll('input[name="metodo_pago"]');
     const camposTarjeta = document.getElementById('campos-tarjeta');
     const mensajeOxxo = document.getElementById('mensaje-oxxo');
@@ -8,22 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const envioEstandarRadio = document.getElementById('envio-estandar');
     const formEnvioEstandar = document.getElementById('form-envio-estandar');
 
-
     const estadoSelect = document.getElementById('estado');
     const envioSpan = document.getElementById('envio');
     const subtotalSpan = document.getElementById('subtotal');
     const impuestoSpan = document.getElementById('impuesto');
     const totalSpan = document.getElementById('total');
 
-    estadoSelect.addEventListener('change', function () {
-        const estado = this.value;
-        const costoEnvio = costosEnvio[estado] || 0;
-        envioSpan.textContent = costoEnvio.toFixed(2);
+    const costosEnvio = {
+        "Jalisco": 150,
+        "CDMX": 180,
+        "Nuevo León": 200,
+        // Otros estados...
+    };
 
-        const subtotal = parseFloat(subtotalSpan.textContent);
-        const impuesto = parseFloat(impuestoSpan.textContent);
-        const total = subtotal + impuesto + costoEnvio;
-        totalSpan.textContent = total.toFixed(2);
+    estadoSelect.addEventListener('change', function () {
+        actualizarTotales();
     });
 
     envioEstandarRadio.addEventListener('change', function () {
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-// Ocultar si se selecciona otro método de envío
     document.querySelectorAll('input[name="metodo_envio"]').forEach(radio => {
         if (radio.id !== 'envio-estandar') {
             radio.addEventListener('change', () => {
@@ -40,34 +38,33 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
     function ocultarTodo() {
-        camposTarjeta.style.display = 'none';  // Ocultar campos de tarjeta
-        mensajeOxxo.style.display = 'none';   // Ocultar mensaje de OXXO
-        mensajePaypal.style.display = 'none'; // Ocultar mensaje de PayPal
-        
+        camposTarjeta.style.display = 'none';
+        mensajeOxxo.style.display = 'none';
+        mensajePaypal.style.display = 'none';
 
         camposTarjeta.querySelectorAll('input').forEach(input => {
             input.required = false;
-            input.value = ''; // Limpiar los valores de los campos
+            input.value = '';
         });
     }
 
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
-            ocultarTodo();  
+            ocultarTodo();
 
             if (radio.value === 'Tarjeta') {
-                camposTarjeta.style.display = 'block';  // Mostrar campos de tarjeta
+                camposTarjeta.style.display = 'block';
                 camposTarjeta.querySelectorAll('input').forEach(input => input.required = true);
             } else if (radio.value === 'OXXO') {
-                mensajeOxxo.style.display = 'block';  // Mostrar mensaje de OXXO
+                mensajeOxxo.style.display = 'block';
             } else if (radio.value === 'PayPal') {
-                mensajePaypal.style.display = 'block';  // Mostrar mensaje de PayPal
+                mensajePaypal.style.display = 'block';
             }
         });
     });
 
-    // Validación del formulario de pago
     form.addEventListener('submit', function (event) {
         const metodoPago = document.querySelector('input[name="metodo_pago"]:checked');
         if (!metodoPago) {
@@ -102,23 +99,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
-
-    // Eliminar producto del carrito
     document.querySelectorAll('.eliminar').forEach(button => {
-    button.addEventListener('click', function () {
+        button.addEventListener('click', function () {
             let fila = this.closest('tr');
-            let id = fila.dataset.id; // Asegúrate de que la fila tenga un atributo data-id
+            let id = fila.dataset.id;
             fetch(`/eliminar_carrito/${id}`, {
                 method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    fila.remove(); // Eliminar la fila del carrito
+                    fila.remove();
                     if (document.querySelectorAll('#tabla-carrito tbody tr').length === 0) {
                         document.getElementById('carrito-container').innerHTML = '<p id="mensaje-vacio">🛒 El carrito está vacío.</p>';
                     }
-                    actualizarTotales(); // Actualizar totales después de eliminar
+                    actualizarTotales();
                 } else {
                     alert('Error al eliminar el artículo');
                 }
@@ -127,108 +122,116 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Cambiar cantidad en el carrito
-    document.querySelectorAll(".cantidad").forEach(input => {
-       input.addEventListener("change", function () {
-           let id = this.dataset.id;
-           let cantidad = this.value;
-           fetch(`/actualizar_carrito/${id}`, {
-               method: "POST",
-               headers: { "Content-Type": "application/json" },
-               body: JSON.stringify({ cantidad: cantidad })
-           })
-           .then(response => response.json())
-           .then(data => {
-               if (data.total !== undefined) {
-                   // Actualizar el total del artículo en la tabla
-                   this.closest("tr").querySelector(".total").textContent = `$${data.total.toFixed(2)}`;
-                   actualizarTotales(); // Actualizar totales después de cambiar la cantidad
-               } else {
-                   console.error("Error al actualizar la cantidad:", data.error);
-               }
-           })
-           .catch(error => console.error("Error:", error));
-       });
-   });
-   actualizarTotales();  // Calcular totales al cargar
+    // ✅ Evento para cambiar cantidad
+    document.querySelectorAll('.cantidad').forEach(input => {
+        input.addEventListener('change', function () {
+            const fila = this.closest('tr');
+            const productoId = fila.getAttribute('data-id');
+            const nuevaCantidad = parseInt(this.value);
 
-    // Agregar la lógica de focus y blur para los campos de entrada
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('focus', function() {
-            this.style.transition = 'transform 0.2s ease'; // Asegurar transición suave
-            this.style.transform = 'scale(1.05)'; // Aumentar tamaño al enfocarse
-        });
+            console.log("🔄 Cambiando cantidad:", { productoId, nuevaCantidad });
 
-        input.addEventListener('blur', function() {
-            this.style.transition = 'transform 0.2s ease'; // Asegurar transición suave
-            this.style.transform = 'scale(1)'; // Volver al tamaño normal cuando se pierde el foco
+            fetch('/actualizar_carrito', {  // Asegúrate que no tenga `/undefined`
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: productoId, cantidad: nuevaCantidad })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    const precio = parseFloat(this.getAttribute('data-precio'));
+                    const nuevoTotal = (precio * nuevaCantidad).toFixed(2);
+                    fila.querySelector('.total').textContent = `$${nuevoTotal}`;
+                } else {
+                    alert('❌ Error al actualizar la cantidad en el carrito.');
+                }
+            });
         });
     });
-});
 
-   function actualizarTotales() {
-       let subtotal = 0;
-       document.querySelectorAll('.cantidad').forEach(input => {
-           let cantidad = parseInt(input.value);
-           let precio = parseFloat(input.getAttribute('data-precio'));
-           let total = cantidad * precio;
-           input.closest('tr').querySelector('.total').textContent = `$${total.toFixed(2)}`;
-           subtotal += total;
-       });
-       let impuesto = subtotal * 0.16; // Suponiendo un impuesto del 16%
-       let totalFinal = subtotal + impuesto;
-       document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-       document.getElementById('impuesto').textContent = impuesto.toFixed(2);
-       document.getElementById('total').textContent = totalFinal.toFixed(2);
-   }
-document.getElementById('btnProcesar').addEventListener('click', function () {
-    const form = document.getElementById('form-pago');
-    const formData = new FormData(form);
+    // ✅ Calcula totales generales
+    function actualizarTotales() {
+        let subtotal = 0;
 
-    // Mostrar modal de carga
-    const modalCargando = new bootstrap.Modal(document.getElementById('modalCargando'));
-    modalCargando.show();
+        document.querySelectorAll(".cantidad").forEach(input => {
+            let cantidad = parseInt(input.value);
+            let precio = parseFloat(input.dataset.precio);
+            subtotal += cantidad * precio;
+        });
 
-    fetch(form.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        modalCargando.hide();
+        let impuesto = subtotal * 0.16;
+        let estado = estadoSelect?.value;
+        let costoEnvio = (estado === 'Sinaloa') ? 0 : (costosEnvio[estado] || 0);
 
-        const modalResultado = new bootstrap.Modal(document.getElementById('modalResultado'));
-        const contenido = document.getElementById('resultadoContenido');
+        subtotalSpan.textContent = subtotal.toFixed(2);
+        impuestoSpan.textContent = impuesto.toFixed(2);
+        envioSpan.textContent = costoEnvio.toFixed(2);
+        totalSpan.textContent = (subtotal + impuesto + costoEnvio).toFixed(2);
+    }
 
-        if (data.success) {
+    actualizarTotales();
+
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function () {
+            this.style.transition = 'transform 0.2s ease';
+            this.style.transform = 'scale(1.05)';
+        });
+
+        input.addEventListener('blur', function () {
+            this.style.transition = 'transform 0.2s ease';
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    document.getElementById('btnProcesar').addEventListener('click', function () {
+        const form = document.getElementById('form-pago');
+        const formData = new FormData(form);
+
+        const modalCargando = new bootstrap.Modal(document.getElementById('modalCargando'));
+        modalCargando.show();
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            modalCargando.hide();
+            const modalResultado = new bootstrap.Modal(document.getElementById('modalResultado'));
+            const contenido = document.getElementById('resultadoContenido');
+
+            if (data.success) {
+                contenido.innerHTML = `
+                    <div class="text-success display-4">✔️</div>
+                    <h4 class="mt-2">¡Pago realizado con éxito!</h4>
+                    <p>${data.message}</p>
+                    <a href="/cliente" class="btn btn-success mt-3">Aceptar</a>
+                `;
+            } else {
+                contenido.innerHTML = `
+                    <div class="text-danger display-4">❌</div>
+                    <h4 class="mt-2">Pago no realizado</h4>
+                    <p>${data.message}</p>
+                    <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">Intentar de nuevo</button>
+                `;
+            }
+
+            modalResultado.show();
+        })
+        .catch(err => {
+            modalCargando.hide();
+            const modalResultado = new bootstrap.Modal(document.getElementById('modalResultado'));
+            const contenido = document.getElementById('resultadoContenido');
             contenido.innerHTML = `
-                <div class="text-success display-4">✔️</div>
-                <h4 class="mt-2">¡Pago realizado con éxito!</h4>
-                <p>${data.message}</p>
-                <a href="/cliente" class="btn btn-success mt-3">Aceptar</a>
+                <div class="text-danger display-4">⚠️</div>
+                <h4 class="mt-2">Error inesperado</h4>
+                <p>Ocurrió un problema al procesar tu pago. Intenta más tarde.</p>
+                <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">Cerrar</button>
             `;
-        } else {
-            contenido.innerHTML = `
-                <div class="text-danger display-4">❌</div>
-                <h4 class="mt-2">Pago no realizado</h4>
-                <p>${data.message}</p>
-                <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">Intentar de nuevo</button>
-            `;
-        }
-
-        modalResultado.show();
-    })
-    .catch(err => {
-        modalCargando.hide();
-        const modalResultado = new bootstrap.Modal(document.getElementById('modalResultado'));
-        const contenido = document.getElementById('resultadoContenido');
-        contenido.innerHTML = `
-            <div class="text-danger display-4">⚠️</div>
-            <h4 class="mt-2">Error inesperado</h4>
-            <p>Ocurrió un problema al procesar tu pago. Intenta más tarde.</p>
-            <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">Cerrar</button>
-        `;
-        modalResultado.show();
+            modalResultado.show();
+        });
     });
 });
 
