@@ -1149,9 +1149,6 @@ def mostrar_carrito():
         return redirect(url_for('login'))
 
 
-
-
-
 @app.route('/eliminar_carrito/<int:id>', methods=['POST'])
 def eliminar_carrito(id):
     carrito = session.get('carrito', {})
@@ -1208,6 +1205,22 @@ def procesar_pago():
     # 🛒 Total del carrito
     carrito = session['carrito']
     total = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
+    
+    # Calcular el IVA
+    total_IVA = total * 0.16  # Ejemplo: 16%
+
+    # Obtener el costo de envío (por ejemplo, desde la base de datos)
+    estado_destino = request.form.get('estado_destino')
+    if estado_destino == 'Sinaloa':
+        envio = 0  # Envío gratuito para Sinaloa
+    else:
+        # Obtener el costo de envío de la base de datos
+        cursor.execute("SELECT costo FROM costo_envio WHERE nombre_estado = %s", (estado_destino,))
+        envio_data = cursor.fetchone()
+        envio = envio_data[0] if envio_data else 0  # Si no se encuentra el estado, no hay costo de envío
+
+    # Calcular el total con IVA y envío
+    total_con_iva_envio = total + total_IVA + envio  # Sumar total, IVA y envío
 
     if metodo_pago == 'Tarjeta':
         num_tarjeta = request.form.get('num_tarjeta')
@@ -1235,7 +1248,7 @@ def procesar_pago():
 
         saldo_actual = float(tarjeta[0])
 
-        if saldo_actual < total:
+        if saldo_actual < total_con_iva_envio:  # Verifica el saldo con IVA y envío
             cursor_banco.close()
             conexion_banco.close()
             return jsonify({'success': False, 'message': 'Saldo insuficiente'}), 400
@@ -1254,20 +1267,18 @@ def procesar_pago():
 
     try:
         cursor.callproc("InsertarVentaConDetalles", 
-                        (usuario_id, total, metodo_pago, status, detalles_json))
+                        (usuario_id, total_con_iva_envio, metodo_pago, status, detalles_json))  # Usar total_con_iva_envio
         cursor.execute("SELECT LAST_INSERT_ID()")
         venta_id = cursor.fetchone()[0]
 
         # ✅ Descontar saldo si pagó con tarjeta
         if metodo_pago == 'Tarjeta':
-            nuevo_saldo = saldo_actual - total
+            nuevo_saldo = saldo_actual - total_con_iva_envio  # Descontar el total con IVA y envío
             cursor_banco.execute("""
                 UPDATE tarjetas SET saldo = %s 
                 WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
             """, (nuevo_saldo, num_tarjeta, nombre_titular, cvv, fecha_exp))
             conexion_banco.commit()
-
-        
 
         conexion.commit()
         session['carrito'] = {}
@@ -1286,7 +1297,7 @@ def procesar_pago():
         conexion.close()
         if metodo_pago == 'Tarjeta':
             cursor_banco.close()
-            conexion_banco.close()
+            conexion_banco.close()  
 
 
 
