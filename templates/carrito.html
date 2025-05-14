@@ -104,7 +104,7 @@
                     <hr>
                         <p><b>Subtotal:</b> $<span id="subtotal">500.00</span></p>
                         <p><b>Impuesto (16%):</b> $<span id="impuesto">80.00</span></p>
-                        <p><b>Envío:</b> $<span id="envio">0.00</span></p>
+                        <p><b>Envío:</b><span id="envio">0.00</span></p>
                     <hr>
                     <h5><b>Total:</b> $<span id="total">580.00</span></h5>
                     <hr>
@@ -181,7 +181,7 @@
                         </div>
 
                         <!-- 🔽 Este bloque va FUERA del label -->
-                        <div id="form-envio-estandar" class="mt-3" style="display: none;">
+                       <div id="form-envio-estandar" class="mt-3" style="display: none;">
                             <label for="estado" class="form-label">Selecciona tu estado de envío</label>
                             <select class="form-select" name="estado" id="estado" required>
                                 <option value="" disabled selected>Selecciona un estado</option>
@@ -218,8 +218,11 @@
         </div>
     </div>
     </div>
-    <script src="{{url_for('static', filename='js/carrito.js')}}"></script>
+    <script>
+        const costosEnvio = JSON.parse('{{ costos_envio | tojson | safe }}');
+    </script>
 
+    <script src="{{url_for('static', filename='js/carrito.js')}}"></script>
 </script>
 </body>
 </html>

@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
     const radios = document.querySelectorAll('input[name="metodo_pago"]');
     const camposTarjeta = document.getElementById('campos-tarjeta');
@@ -13,13 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const subtotalSpan = document.getElementById('subtotal');
     const impuestoSpan = document.getElementById('impuesto');
     const totalSpan = document.getElementById('total');
-
-    const costosEnvio = {
-        "Jalisco": 150,
-        "CDMX": 180,
-        "Nuevo León": 200,
-        // Otros estados...
-    };
 
     estadoSelect.addEventListener('change', function () {
         actualizarTotales();
@@ -153,24 +145,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ✅ Calcula totales generales
     function actualizarTotales() {
-        let subtotal = 0;
+    let subtotal = 0;
 
-        document.querySelectorAll(".cantidad").forEach(input => {
-            let cantidad = parseInt(input.value);
-            let precio = parseFloat(input.dataset.precio);
-            subtotal += cantidad * precio;
-        });
+    document.querySelectorAll(".cantidad").forEach(input => {
+        let cantidad = parseInt(input.value);
+        let precio = parseFloat(input.dataset.precio);
+        subtotal += cantidad * precio;
+    });
 
-        let impuesto = subtotal * 0.16;
-        let estado = estadoSelect?.value;
-        let costoEnvio = (estado === 'Sinaloa') ? 0 : (costosEnvio[estado] || 0);
+    let impuesto = subtotal * 0.16;
+    let estado = estadoSelect?.value;
+    let costoEnvio = (estado === 'Sinaloa') ? 0 : (costosEnvio[estado] || 0);
 
-        subtotalSpan.textContent = subtotal.toFixed(2);
-        impuestoSpan.textContent = impuesto.toFixed(2);
-        envioSpan.textContent = costoEnvio.toFixed(2);
-        totalSpan.textContent = (subtotal + impuesto + costoEnvio).toFixed(2);
+    subtotalSpan.textContent = subtotal.toFixed(2);
+    impuestoSpan.textContent = impuesto.toFixed(2);
+
+    // Mostrar "Gratis" si el envío es 0
+    if (costoEnvio === 0) {
+        envioSpan.textContent = "Gratis";
+    } else {
+        envioSpan.textContent = `$${costoEnvio.toFixed(2)}`;
     }
 
+    totalSpan.textContent = (subtotal + impuesto + costoEnvio).toFixed(2);
+}
     actualizarTotales();
 
     document.querySelectorAll('input').forEach(input => {

@@ -1146,8 +1146,8 @@ def mostrar_carrito():
 
         return render_template('carrito.html', carrito=carrito, username=username, estados=estados, costos_envio=costos_envio)
     else:
-        print("❌ No hay usuario en sesión")
         return redirect(url_for('login'))
+
 
 
 
