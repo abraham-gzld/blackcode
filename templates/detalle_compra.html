@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Confirmación de Compra</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <div class="text-center mb-4">
+        <h2 class="text-success">
+          <i class="bi bi-check-circle-fill"></i> ¡Gracias por tu compra!
+        </h2>
+        <p class="lead">Tu pedido ha sido realizado correctamente.</p>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Resumen del pedido</h5>
+          <p><strong>Fecha:</strong> {{ venta.fecha }}</p>
+          <p><strong>Estado:</strong> {{ venta.status }}</p>
+          <p><strong>Total:</strong> ${{ venta.total }}</p>
+          <p><strong>Método de pago:</strong> {{ venta.metodo_pago }}</p>
+          <p><strong>Usuario:</strong> {{ venta.nombre_usuario }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Artículos comprados</h5>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Producto</th>
+                  <th class="text-center">Cantidad</th>
+                  <th class="text-end">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in detalles %}
+                <tr>
+                  <td>{{ item.nombre_articulo }}</td>
+                  <td class="text-center">{{ item.cantidad }}</td>
+                  <td class="text-end">${{ item.sub_total }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 d-flex justify-content-between">
+        <a
+          href="{{ url_for('ver_pedidos') }}"
+          class="btn btn-outline-secondary"
+        >
+          <i class="bi bi-box-seam"></i> Ver mis pedidos
+        </a>
+        <a href="/cliente" class="btn btn-primary">
+          <i class="bi bi-house"></i> Seguir comprando
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

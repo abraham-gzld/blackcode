@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const radios = document.querySelectorAll('input[name="metodo_pago"]');
     const camposTarjeta = document.getElementById('campos-tarjeta');
     const mensajeOxxo = document.getElementById('mensaje-oxxo');
+    const mensajeEfectivo = document.getElementById('mensaje-efectivo');
     const mensajePaypal = document.getElementById('mensaje-paypal');
     const form = document.getElementById('form-pago');
     const envioEstandarRadio = document.getElementById('envio-estandar');
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
         camposTarjeta.style.display = 'none';
         mensajeOxxo.style.display = 'none';
         mensajePaypal.style.display = 'none';
+        mensajeEfectivo.style.display= 'none';
 
         camposTarjeta.querySelectorAll('input').forEach(input => {
             input.required = false;
@@ -52,6 +54,8 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (radio.value === 'OXXO') {
                 mensajeOxxo.style.display = 'block';
             } else if (radio.value === 'PayPal') {
+                mensajePaypal.style.display = 'block';
+            }else if (radio.value === 'EFECTIVO') {
                 mensajePaypal.style.display = 'block';
             }
         });
@@ -201,19 +205,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const contenido = document.getElementById('resultadoContenido');
 
             if (data.success) {
-                contenido.innerHTML = `
-                    <div class="text-success display-4">✔️</div>
-                    <h4 class="mt-2">¡Pago realizado con éxito!</h4>
-                    <p>${data.message}</p>
-                    <a href="/cliente" class="btn btn-success mt-3">Aceptar</a>
-                `;
+                window.location.href = data.redirect_url;
             } else {
+                // Mostrar modal con error
                 contenido.innerHTML = `
                     <div class="text-danger display-4">❌</div>
                     <h4 class="mt-2">Pago no realizado</h4>
                     <p>${data.message}</p>
                     <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">Intentar de nuevo</button>
                 `;
+                modalResultado.show();
             }
 
             modalResultado.show();

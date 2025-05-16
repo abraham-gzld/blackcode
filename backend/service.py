@@ -1,6 +1,7 @@
 import datetime
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql, os 
+import pymysql.cursors
 from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion, obtener_conexion_banco
 from datetime import datetime
@@ -1148,7 +1149,6 @@ def mostrar_carrito():
     else:
         return redirect(url_for('login'))
 
-
 @app.route('/eliminar_carrito/<int:id>', methods=['POST'])
 def eliminar_carrito(id):
     carrito = session.get('carrito', {})
@@ -1198,29 +1198,27 @@ def procesar_pago():
 
     usuario_id = usuario[0]
     metodo_pago = request.form.get('metodo_pago')
+    estado_destino = request.form.get('estado_destino')
 
     if not metodo_pago:
         return jsonify({'success': False, 'message': 'Método de pago no especificado'}), 400
 
-    # 🛒 Total del carrito
     carrito = session['carrito']
-    total = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
-    
-    # Calcular el IVA
-    total_IVA = total * 0.16  # Ejemplo: 16%
+    total_productos = sum(int(prod['cantidad']) * float(prod['precio']) for prod in carrito.values())
 
-    # Obtener el costo de envío (por ejemplo, desde la base de datos)
-    estado_destino = request.form.get('estado_destino')
+    # IVA del 16%
+    total_iva = total_productos * 0.16
+
+    # Costo de envío según estado
     if estado_destino == 'Sinaloa':
-        envio = 0  # Envío gratuito para Sinaloa
+        envio = 0
     else:
-        # Obtener el costo de envío de la base de datos
-        cursor.execute("SELECT costo FROM costo_envio WHERE nombre_estado = %s", (estado_destino,))
+        cursor.execute("SELECT costo FROM costos_envio WHERE estado_destino = %s", (estado_destino,))
         envio_data = cursor.fetchone()
-        envio = envio_data[0] if envio_data else 0  # Si no se encuentra el estado, no hay costo de envío
+        envio = float(envio_data[0]) if envio_data else 0
 
-    # Calcular el total con IVA y envío
-    total_con_iva_envio = total + total_IVA + envio  # Sumar total, IVA y envío
+    # Total final
+    total_final = total_productos + total_iva + envio
 
     if metodo_pago == 'Tarjeta':
         num_tarjeta = request.form.get('num_tarjeta')
@@ -1248,32 +1246,50 @@ def procesar_pago():
 
         saldo_actual = float(tarjeta[0])
 
-        if saldo_actual < total_con_iva_envio:  # Verifica el saldo con IVA y envío
+        if saldo_actual < total_final:
             cursor_banco.close()
             conexion_banco.close()
             return jsonify({'success': False, 'message': 'Saldo insuficiente'}), 400
 
     # Procesar venta
     status = "Pendiente"
-    detalles_venta = [
-        {
+
+    # Calcular el total de artículos para distribuir envío proporcionalmente
+    total_cantidades = sum(int(prod['cantidad']) for prod in carrito.values())
+
+    # Generar detalle con IVA y envío proporcional
+    detalles_venta = []
+    for id, producto in carrito.items():
+        cantidad = int(producto['cantidad'])
+        precio = float(producto['precio'])
+        sub_total = cantidad * precio
+        iva = sub_total * 0.16
+        envio_proporcional = (cantidad / total_cantidades) * envio if total_cantidades > 0 else 0
+        total_item = sub_total + iva + envio_proporcional
+
+        detalles_venta.append({
             "articulo_id": int(id),
-            "cantidad": int(producto["cantidad"]),
-            "sub_total": float(producto["cantidad"]) * float(producto["precio"])
-        }
-        for id, producto in carrito.items()
-    ]
+            "cantidad": cantidad,
+            "precio_unitario": precio,
+            "sub_total": round(sub_total, 2),
+            "iva": round(iva, 2),
+            "envio": round(envio_proporcional, 2),
+            "total": round(total_item, 2)
+        })
+
     detalles_json = json.dumps(detalles_venta)
 
     try:
-        cursor.callproc("InsertarVentaConDetalles", 
-                        (usuario_id, total_con_iva_envio, metodo_pago, status, detalles_json))  # Usar total_con_iva_envio
-        cursor.execute("SELECT LAST_INSERT_ID()")
+        args = (usuario_id, total_final, metodo_pago, status, detalles_json, 0)
+        cursor.callproc("InsertarVentaConDetalles", args)
+
+        # Recuperar el valor del parámetro OUT (índice 5)
+        cursor.execute("SELECT @_InsertarVentaConDetalles_5")
         venta_id = cursor.fetchone()[0]
 
-        # ✅ Descontar saldo si pagó con tarjeta
+
         if metodo_pago == 'Tarjeta':
-            nuevo_saldo = saldo_actual - total_con_iva_envio  # Descontar el total con IVA y envío
+            nuevo_saldo = saldo_actual - total_final
             cursor_banco.execute("""
                 UPDATE tarjetas SET saldo = %s 
                 WHERE num_tarjeta = %s AND nombre_titular = %s AND cvv = %s AND fecha = %s
@@ -1284,7 +1300,7 @@ def procesar_pago():
         session['carrito'] = {}
         session.modified = True
 
-        return jsonify({'success': True, 'message': 'Pago realizado con éxito', 'venta_id': venta_id})
+        return jsonify({'success': True, 'redirect_url': url_for('detalle_compra', venta_id=venta_id)})
 
     except Exception as e:
         conexion.rollback()
@@ -1297,14 +1313,90 @@ def procesar_pago():
         conexion.close()
         if metodo_pago == 'Tarjeta':
             cursor_banco.close()
-            conexion_banco.close()  
+            conexion_banco.close()
 
+
+@app.route('/detalle_compra/<int:venta_id>')
+def detalle_compra(venta_id):
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+
+    # Obtener datos generales de la venta
+    cursor.execute("""
+        SELECT v.id AS venta_id, v.fecha, v.total, v.metodo_pago, v.status,
+               u.username AS nombre_usuario
+        FROM venta v
+        JOIN usuarios u ON v.usuario_id = u.id
+        WHERE v.id = %s
+    """, (venta_id,))
+    venta = cursor.fetchone()
+
+    # Obtener detalles de los productos
+    cursor.execute("""
+        SELECT vd.articulo_id, a.descripcion AS nombre_articulo, vd.cantidad, vd.sub_total
+        FROM venta_detalle vd
+        JOIN articulos a ON vd.articulo_id = a.id
+        WHERE vd.venta_id = %s
+    """, (venta_id,))
+    detalles = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    if not venta:
+        return "Venta no encontrada", 404
+
+    return render_template("detalle_compra.html", venta=venta, detalles=detalles)
+
+
+def obtener_detalles_de_venta(venta_id, usuario_id):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor(dictionary=True) as cursor:
+            # Verifica que la venta pertenezca al usuario
+            cursor.execute("""
+                SELECT v.id, v.fecha, v.total, v.status
+                FROM Venta v
+                WHERE v.id = %s AND v.usuario_id = %s
+            """, (venta_id, usuario_id))
+            venta = cursor.fetchone()
+
+            if not venta:
+                return None
+
+            # Obtener detalles de artículos
+            cursor.execute("""
+                SELECT a.nombre, a.descripcion, dv.cantidad, dv.sub_total
+                FROM DetalleVenta dv
+                JOIN Articulo a ON dv.articulo_id = a.id
+                WHERE dv.venta_id = %s
+            """, (venta_id,))
+            articulos = cursor.fetchall()
+
+            venta['articulos'] = articulos
+            return venta
+    finally:
+        conexion.close()
 
 
 @app.route('/pedidos')
 def ver_pedidos():
-    usuario_id = 1  # Aquí deberías obtener el ID del usuario de la sesión
-    pedidos = obtener_pedidos_por_usuario(usuario_id)  # Función que recupera los pedidos del usuario
+    if 'usuario' not in session:
+        return redirect(url_for('login'))  # Redirige si no ha iniciado sesión
+
+    cliente_email = session['usuario']
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+    cursor.execute("SELECT id FROM usuarios WHERE email = %s", (cliente_email,))
+    usuario = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+
+    if not usuario:
+        return "Usuario no encontrado", 404
+
+    usuario_id = usuario[0]
+    pedidos = obtener_pedidos_por_usuario(usuario_id)
     return render_template('pedidos.html', pedidos=pedidos)
 
 def obtener_pedidos_por_usuario(usuario_id):
@@ -1315,10 +1407,12 @@ def obtener_pedidos_por_usuario(usuario_id):
                 SELECT v.id AS venta_id, v.fecha, v.total, v.status
                 FROM Venta v
                 WHERE v.usuario_id = %s
+                ORDER BY v.fecha DESC
             """, (usuario_id,))
-            return cursor.fetchall()  # Esto devuelve una lista de tuplas
+            return cursor.fetchall()  # Devuelve una lista de diccionarios
     finally:
         conexion.close()
+
 
 @app.route('/pedidos/<int:venta_id>')
 def ver_detalle_pedido(venta_id):
