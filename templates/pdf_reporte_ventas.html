@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas Totales por Producto</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h2 { text-align: center; }
+        table {
+            width: 100%; border-collapse: collapse; margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black; padding: 8px; text-align: center;
+        }
+        th { background-color: #eee; }
+    </style>
+</head>
+<body>
+    <h2>Ventas Totales por Producto</h2>
+    {% if fecha_inicio and fecha_fin %}
+        <p>Del {{ fecha_inicio }} al {{ fecha_fin }}</p>
+    {% elif fecha_inicio %}
+        <p>Desde el {{ fecha_inicio }}</p>
+    {% elif fecha_fin %}
+        <p>Hasta el {{ fecha_fin }}</p>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad Vendida</th>
+                <th>Precio</th>
+                <th>Impuesto (%)</th>
+                <th>Total sin Impuesto</th>
+                <th>Total con Impuesto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in productos %}
+            <tr>
+                <td>{{ p.producto }}</td>
+                <td>{{ p.cantidad_total_vendida }}</td>
+                <td>${{ "%.2f"|format(p.precio) }}</td>
+                <td>{{ p.impuesto }}%</td>
+                <td>${{ "%.2f"|format(p.total_sin_impuesto) }}</td>
+                <td>${{ "%.2f"|format(p.total_con_impuesto) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

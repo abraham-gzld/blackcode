@@ -1,6 +1,7 @@
 import datetime
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql, os 
+from weasyprint import HTML
 import pymysql.cursors
 from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion, obtener_conexion_banco
@@ -129,6 +130,101 @@ def actualizar_perfil():
     return redirect(url_for("perfil"))
 
     
+@app.route("/reporte_ventas")
+def reporte_ventas():
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)  # dict para usar nombres de columnas
+    
+
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    
+    query = """
+        SELECT 
+            v.id AS venta_id,
+            v.fecha,
+            u.username,
+            v.metodo_pago,
+            v.total,
+            vd.articulo_id,
+            a.descripcion AS articulo,
+            vd.cantidad,
+            vd.sub_total
+        FROM Venta v
+        JOIN Usuarios u ON v.usuario_id = u.id
+        JOIN Venta_detalle vd ON vd.venta_id = v.id
+        JOIN Articulos a ON vd.articulo_id = a.id
+        WHERE v.status = 'Pedido entregado'
+    """
+    
+    params = []
+    if fecha_inicio and fecha_fin:
+        query += " AND v.fecha BETWEEN %s AND %s"
+        params.extend([fecha_inicio, fecha_fin])
+    
+    query += " ORDER BY v.fecha DESC"
+    
+    cursor.execute(query, params)
+    ventas = cursor.fetchall()
+    
+    cursor.close()
+    conexion.close()
+    
+    return render_template("reporte_ventas.html", ventas=ventas, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+
+@app.route('/reporte_ventas_pdf')
+def reporte_ventas_pdf():
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+
+    conexion = obtener_conexion()
+    with conexion.cursor(pymysql.cursors.DictCursor) as cursor:
+        query = """
+            SELECT 
+                a.descripcion AS producto,
+                SUM(vd.cantidad) AS cantidad_total_vendida,
+                a.precio,
+                a.impuesto,
+                ROUND(SUM(vd.cantidad * a.precio), 2) AS total_sin_impuesto,
+                ROUND(SUM(vd.cantidad * a.precio * (1 + a.impuesto / 100)), 2) AS total_con_impuesto
+            FROM Venta v
+            JOIN Venta_detalle vd ON v.id = vd.venta_id
+            JOIN Articulos a ON vd.articulo_id = a.id
+            WHERE v.status = 'completada'
+        """
+
+        filtros = []
+        valores = []
+
+        if fecha_inicio:
+            filtros.append("v.fecha >= %s")
+            valores.append(fecha_inicio)
+        if fecha_fin:
+            filtros.append("v.fecha <= %s")
+            valores.append(fecha_fin)
+
+        if filtros:
+            query += " AND " + " AND ".join(filtros)
+
+        query += " GROUP BY a.id ORDER BY total_con_impuesto DESC"
+
+        cursor.execute(query, valores)
+        productos = cursor.fetchall()
+
+    total_general = sum(p['total_con_impuesto'] for p in productos)
+
+    html = render_template('pdf_reporte_ventas.html',
+                           productos=productos,
+                           fecha_inicio=fecha_inicio,
+                           fecha_fin=fecha_fin,
+                           total_general=total_general)
+
+    pdf = HTML(string=html).write_pdf()
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=ventas_agrupadas.pdf'
+    return response
+
     
 @app.route('/almacen_editar_articulo/<int:id>')
 def almacen_actualizar_articulo(id):
