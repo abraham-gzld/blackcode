@@ -22,7 +22,7 @@ def login():
         conexion = obtener_conexion()
         cursor = conexion.cursor()
 
-        query = "SELECT email, password, username, rol FROM usuarios WHERE email = %s AND password = %s"
+        query = "SELECT id, email, password, username, rol FROM usuarios WHERE email = %s AND password = %s"
         cursor.execute(query, (email, password))
         usuario = cursor.fetchone()
 
@@ -30,11 +30,13 @@ def login():
         conexion.close()
 
         if usuario:
-            email, password, username, rol = usuario  # 🔹 Desempaquetado corregido
-            
-            session["usuario"] = email  
-            session["username"] = username  
-            session["rol"] = rol  
+            id, email, password, username, rol = usuario  # ✅ orden correcto
+
+            session["user_id"] = id
+            session["usuario"] = email
+            session["username"] = username
+            session["rol"] = rol
+
 
             if rol == "Administrador":
                 return redirect(url_for("dashboard"))
@@ -56,6 +58,78 @@ def login():
     return render_template("login.html")
 
 
+@app.route('/perfil')
+def perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Redirige si no está logeado
+
+    user_id = session['user_id']
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM Usuarios WHERE id = %s", (user_id,))
+    usuario = cursor.fetchone()
+    cursor.close()
+    conexion.close()
+
+    return render_template('edit_usuario.html', usuario=usuario)
+
+
+
+@app.route("/actualizar_perfil", methods=["POST"])
+def actualizar_perfil():
+    if "user_id" not in session:
+        flash("Debes iniciar sesión para editar tu perfil.", "warning")
+        return redirect(url_for("login"))
+
+    id_usuario = session["user_id"]
+
+    # Obtener datos del formulario
+    email = request.form["email"]
+    username = request.form["username"]
+    nombres = request.form["nombres"]
+    apellido_paterno = request.form["apellido_paterno"]
+    apellido_materno = request.form["apellido_materno"]
+    RFC = request.form["RFC"]
+    codigo_postal = request.form["codigo_postal"]
+    calle = request.form["calle"]
+    numero_interior = request.form["numero_interior"]
+    numero_exterior = request.form["numero_exterior"]
+    colonia = request.form["colonia"]
+    ciudad = request.form["ciudad"]
+
+    # Conexión a la base de datos
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    # Actualizar usuario
+    consulta = """
+        UPDATE usuarios
+        SET email = %s, username = %s, nombres = %s,
+            apellido_paterno = %s, apellido_materno = %s, RFC = %s,
+            codigo_postal = %s, calle = %s, numero_interior = %s,
+            numero_exterior = %s, colonia = %s, ciudad = %s
+        WHERE id = %s
+    """
+    valores = (
+        email, username, nombres, apellido_paterno, apellido_materno,
+        RFC, codigo_postal, calle, numero_interior,
+        numero_exterior, colonia, ciudad, id_usuario
+    )
+
+    cursor.execute(consulta, valores)
+    conexion.commit()
+
+    cursor.close()
+    conexion.close()
+
+    # También puedes actualizar el username en la sesión por si cambia
+    session["username"] = username
+
+    flash("Tu perfil ha sido actualizado exitosamente.", "success")
+    return redirect(url_for("perfil"))
+
+    
+    
 @app.route('/almacen_editar_articulo/<int:id>')
 def almacen_actualizar_articulo(id):
     conexion = obtener_conexion()
