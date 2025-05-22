@@ -1,12 +1,11 @@
 import datetime
 from flask import Flask, json, render_template, request, redirect, url_for, session, flash,jsonify
 import pymysql, os 
-from weasyprint import HTML
 import pymysql.cursors
 from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion, obtener_conexion_banco
 from datetime import datetime
-
+from collections import defaultdict
 
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"
@@ -129,13 +128,13 @@ def actualizar_perfil():
     flash("Tu perfil ha sido actualizado exitosamente.", "success")
     return redirect(url_for("perfil"))
 
-    
+
+
 @app.route("/reporte_ventas")
 def reporte_ventas():
     conexion = obtener_conexion()
-    cursor = conexion.cursor(pymysql.cursors.DictCursor)  # dict para usar nombres de columnas
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
     
-
     fecha_inicio = request.args.get("fecha_inicio")
     fecha_fin = request.args.get("fecha_fin")
     
@@ -165,66 +164,29 @@ def reporte_ventas():
     query += " ORDER BY v.fecha DESC"
     
     cursor.execute(query, params)
-    ventas = cursor.fetchall()
+    resultados = cursor.fetchall()
     
     cursor.close()
     conexion.close()
-    
-    return render_template("reporte_ventas.html", ventas=ventas, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
 
-@app.route('/reporte_ventas_pdf')
-def reporte_ventas_pdf():
-    fecha_inicio = request.args.get('fecha_inicio')
-    fecha_fin = request.args.get('fecha_fin')
+    # Agrupar por venta_id
+    ventas_agrupadas = defaultdict(lambda: {"detalles": []})
+    for row in resultados:
+        venta_id = row["venta_id"]
+        if "fecha" not in ventas_agrupadas[venta_id]:
+            ventas_agrupadas[venta_id].update({
+                "fecha": row["fecha"],
+                "username": row["username"],
+                "metodo_pago": row["metodo_pago"],
+                "total": row["total"]
+            })
+        ventas_agrupadas[venta_id]["detalles"].append({
+            "articulo": row["articulo"],
+            "cantidad": row["cantidad"],
+            "sub_total": row["sub_total"]
+        })
 
-    conexion = obtener_conexion()
-    with conexion.cursor(pymysql.cursors.DictCursor) as cursor:
-        query = """
-            SELECT 
-                a.descripcion AS producto,
-                SUM(vd.cantidad) AS cantidad_total_vendida,
-                a.precio,
-                a.impuesto,
-                ROUND(SUM(vd.cantidad * a.precio), 2) AS total_sin_impuesto,
-                ROUND(SUM(vd.cantidad * a.precio * (1 + a.impuesto / 100)), 2) AS total_con_impuesto
-            FROM Venta v
-            JOIN Venta_detalle vd ON v.id = vd.venta_id
-            JOIN Articulos a ON vd.articulo_id = a.id
-            WHERE v.status = 'completada'
-        """
-
-        filtros = []
-        valores = []
-
-        if fecha_inicio:
-            filtros.append("v.fecha >= %s")
-            valores.append(fecha_inicio)
-        if fecha_fin:
-            filtros.append("v.fecha <= %s")
-            valores.append(fecha_fin)
-
-        if filtros:
-            query += " AND " + " AND ".join(filtros)
-
-        query += " GROUP BY a.id ORDER BY total_con_impuesto DESC"
-
-        cursor.execute(query, valores)
-        productos = cursor.fetchall()
-
-    total_general = sum(p['total_con_impuesto'] for p in productos)
-
-    html = render_template('pdf_reporte_ventas.html',
-                           productos=productos,
-                           fecha_inicio=fecha_inicio,
-                           fecha_fin=fecha_fin,
-                           total_general=total_general)
-
-    pdf = HTML(string=html).write_pdf()
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=ventas_agrupadas.pdf'
-    return response
-
+    return render_template("reporte_ventas.html", ventas=ventas_agrupadas, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
     
 @app.route('/almacen_editar_articulo/<int:id>')
 def almacen_actualizar_articulo(id):

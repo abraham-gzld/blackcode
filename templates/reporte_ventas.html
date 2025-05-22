@@ -1,192 +1,379 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Reporte de Ventas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary" style="border-bottom: 1px solid black;">
-      <div class="container-fluid d-flex justify-content-between align-items-center">
-           <!-- Botón del Sidebar -->
-           <button class="btn btn-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-            <i class="bi bi-list" style="font-size: 25px;"></i>
-            </button>
-          <a class="navbar-brand">BlackCode</a>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg bg-body-tertiary"
+      style="border-bottom: 1px solid black"
+    >
+      <div
+        class="container-fluid d-flex justify-content-between align-items-center"
+      >
+        <!-- Botón del Sidebar -->
+        <button
+          class="btn btn-light me-2"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#offcanvasSidebar"
+          aria-controls="offcanvasSidebar"
+        >
+          <i class="bi bi-list" style="font-size: 25px"></i>
+        </button>
+        <a class="navbar-brand">BlackCode</a>
 
-          <form class="d-flex flex-grow-1 justify-content-center" role="search">
-              <input class="form-control w-50 me-2" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success" type="submit">Search</button>
-          </form>
+        <form class="d-flex flex-grow-1 justify-content-center" role="search">
+          <input
+            class="form-control w-50 me-2"
+            type="search"
+            placeholder="Search"
+            aria-label="Search"
+          />
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
 
-          <div class="Options d-flex align-items-center">
-            <ul class="d-flex list-unstyled m-0 gap-3 align-items-center">
-                <li><a href="#"><i class="bi bi-basket3-fill"></i></a></li>
-                <li><a href="#"><i class="bi bi-heart-fill"></i></a></li>
-                
-                <div class="flex-shrink-0 dropdown">
-                    <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end text-small shadow text-center" style="min-width: 200px; right: 0;">
-                        <li class="dropdown-header">
-                            <b class="d-block">Bienvenido</b>
-                            <b><p class="mb-1 text-muted">{{ username }}</p></b>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="/login">Sign out</a></li>
-                    </ul>
-                </div>
-            </ul>
+        <div class="Options d-flex align-items-center">
+          <ul class="d-flex list-unstyled m-0 gap-3 align-items-center">
+            <li>
+              <a href="#"><i class="bi bi-basket3-fill"></i></a>
+            </li>
+            <li>
+              <a href="#"><i class="bi bi-heart-fill"></i></a>
+            </li>
+
+            <div class="flex-shrink-0 dropdown">
+              <a
+                href="#"
+                class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <img
+                  src="https://github.com/mdo.png"
+                  alt="mdo"
+                  width="32"
+                  height="32"
+                  class="rounded-circle"
+                />
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-end text-small shadow text-center"
+                style="min-width: 200px; right: 0"
+              >
+                <li class="dropdown-header">
+                  <b class="d-block">Bienvenido</b>
+                  <b><p class="mb-1 text-muted">{{ username }}</p></b>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item text-danger" href="/login"
+                    >Sign out</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </ul>
         </div>
-        
       </div>
     </nav>
-    <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menú</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div
+      class="offcanvas offcanvas-start bg-dark text-white"
+      tabindex="-1"
+      id="offcanvasSidebar"
+      aria-labelledby="offcanvasSidebarLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menú</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="accordion p-3" id="adminMenu">
+        <!-- Gestión de Usuarios -->
+        <div
+          class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow"
+        >
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button bg-dark text-white fw-bold shadow-none"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#usuariosCollapse"
+            >
+              <i class="bi bi-people me-2"></i> Gestión de Usuarios
+            </button>
+          </h2>
+          <div
+            id="usuariosCollapse"
+            class="accordion-collapse collapse"
+            data-bs-parent="#adminMenu"
+          >
+            <div class="accordion-body">
+              <ul class="list-unstyled">
+                <li>
+                  <a
+                    href="/ver_usuarios"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-eye me-2"></i> Ver Usuarios</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div class="accordion p-3" id="adminMenu">
-            <!-- Gestión de Usuarios -->
-            <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
-                <h2 class="accordion-header">
-                    <button class="accordion-button bg-dark text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#usuariosCollapse">
-                        <i class="bi bi-people me-2"></i> Gestión de Usuarios
-                    </button>
-                </h2>
-                <div id="usuariosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled">
-                            <li><a href="/ver_usuarios" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Usuarios</a></li>
-                        </ul>
-                    </div>
-                </div>
+
+        <!-- Administrar Productos -->
+        <div
+          class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow"
+        >
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button bg-dark text-white fw-bold shadow-none"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#productosCollapse"
+            >
+              <i class="bi bi-box-seam me-2"></i> Administrar Productos
+            </button>
+          </h2>
+          <div
+            id="productosCollapse"
+            class="accordion-collapse collapse"
+            data-bs-parent="#adminMenu"
+          >
+            <div class="accordion-body">
+              <ul class="list-unstyled">
+                <li>
+                  <a
+                    href="articulos"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-eye me-2"></i> Ver Productos</a
+                  >
+                </li>
+              </ul>
             </div>
-        
-            <!-- Administrar Productos -->
-            <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
-                <h2 class="accordion-header">
-                    <button class="accordion-button bg-dark text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#productosCollapse">
-                        <i class="bi bi-box-seam me-2"></i> Administrar Productos
-                    </button>
-                </h2>
-                <div id="productosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled">
-                            <li><a href="articulos" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Productos</a></li>
-                           
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Gestión de Pedidos -->
-            <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
-                <h2 class="accordion-header">
-                    <button class="accordion-button bg-dark text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#pedidosCollapse">
-                        <i class="bi bi-cart-check me-2"></i> Gestión de Pedidos
-                    </button>
-                </h2>
-                <div id="pedidosCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled">
-                            <li><a href="/ver_compras" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-eye me-2"></i> Ver Pedidos</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Reportes y Ventas -->
-            <div class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow">
-                <h2 class="accordion-header">
-                    <button class="accordion-button bg-dark text-white fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#reportesCollapse">
-                        <i class="bi bi-bar-chart-line me-2"></i> Reportes y Ventas
-                    </button>
-                </h2>
-                <div id="reportesCollapse" class="accordion-collapse collapse" data-bs-parent="#adminMenu">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled">
-                            <li><a href="/reporte_ventas" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-graph-up me-2"></i> Ver Ventas</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-file-earmark-bar-graph me-2"></i> Generar Reportes</a></li>
-                            <li><a href="#" class="text-white d-block p-2 rounded hover-effect"><i class="bi bi-search me-2"></i> Análisis de Productos</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-        
+
+        <!-- Gestión de Pedidos -->
+        <div
+          class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow"
+        >
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button bg-dark text-white fw-bold shadow-none"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#pedidosCollapse"
+            >
+              <i class="bi bi-cart-check me-2"></i> Gestión de Pedidos
+            </button>
+          </h2>
+          <div
+            id="pedidosCollapse"
+            class="accordion-collapse collapse"
+            data-bs-parent="#adminMenu"
+          >
+            <div class="accordion-body">
+              <ul class="list-unstyled">
+                <li>
+                  <a
+                    href="/ver_compras"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-eye me-2"></i> Ver Pedidos</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reportes y Ventas -->
+        <div
+          class="accordion-item bg-dark text-white border-0 rounded mb-2 shadow"
+        >
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button bg-dark text-white fw-bold shadow-none"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#reportesCollapse"
+            >
+              <i class="bi bi-bar-chart-line me-2"></i> Reportes y Ventas
+            </button>
+          </h2>
+          <div
+            id="reportesCollapse"
+            class="accordion-collapse collapse"
+            data-bs-parent="#adminMenu"
+          >
+            <div class="accordion-body">
+              <ul class="list-unstyled">
+                <li>
+                  <a
+                    href="/reporte_ventas"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-graph-up me-2"></i> Ver Ventas</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-file-earmark-bar-graph me-2"></i> Generar
+                    Reportes</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="text-white d-block p-2 rounded hover-effect"
+                    ><i class="bi bi-search me-2"></i> Análisis de Productos</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="container my-4">
-        <h2>Reporte de Ventas</h2>
-        
-        <form method="get" class="row g-3 mb-4">
-            <div class="col-auto">
-                <label>Fecha Inicio</label>
-                <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control">
-            </div>
-            <div class="col-auto">
-                <label>Fecha Fin</label>
-                <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control">
-            </div>
-            <div class="col-auto align-self-end">
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-            </div>
-        </form>
-        
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Venta ID</th>
-                    <th>Fecha</th>
-                    <th>Usuario</th>
-                    <th>Método Pago</th>
+      <h2>Reporte de Ventas</h2>
+
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-auto">
+          <label>Fecha Inicio</label>
+          <input
+            type="date"
+            name="fecha_inicio"
+            value="{{ fecha_inicio }}"
+            class="form-control"
+          />
+        </div>
+        <div class="col-auto">
+          <label>Fecha Fin</label>
+          <input
+            type="date"
+            name="fecha_fin"
+            value="{{ fecha_fin }}"
+            class="form-control"
+          />
+        </div>
+        <div class="col-auto align-self-end">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </form>
+
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Venta ID</th>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Método Pago</th>
+            <th>Total Venta</th>
+            <th>Detalles</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for venta_id, venta in ventas.items() %}
+          <tr>
+            <td>{{ venta_id }}</td>
+            <td>{{ venta.fecha }}</td>
+            <td>{{ venta.username }}</td>
+            <td>{{ venta.metodo_pago }}</td>
+            <td>${{ "%.2f"|format(venta.total) }}</td>
+            <td>
+              <button
+                class="btn btn-sm btn-outline-primary"
+                onclick="toggleDetalle('{{ venta_id }}', this)"
+              >
+                Ver
+              </button>
+            </td>
+          </tr>
+          <tr id="detalle-{{ venta_id }}" style="display: none">
+            <td colspan="6">
+              <table class="table table-bordered table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
                     <th>Artículo</th>
                     <th>Cantidad</th>
                     <th>Subtotal</th>
-                    <th>Total Venta</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for v in ventas %}
-                <tr>
-                    <td>{{ v.venta_id }}</td>
-                    <td>{{ v.fecha }}</td>
-                    <td>{{ v.username }}</td>
-                    <td>{{ v.metodo_pago }}</td>
-                    <td>{{ v.articulo }}</td>
-                    <td>{{ v.cantidad }}</td>
-                    <td>${{ "%.2f"|format(v.sub_total) }}</td>
-                    <td>${{ "%.2f"|format(v.total) }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="8" class="text-center">No hay ventas registradas.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="col-auto align-self-end">
-            <a href="/reporte_ventas_pdf?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" target="_blank" class="btn btn-danger">
-                <i class="bi bi-file-earmark-pdf-fill"></i> Generar PDF
-            </a>
-        </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for detalle in venta.detalles %}
+                  <tr>
+                    <td>{{ detalle.articulo }}</td>
+                    <td>{{ detalle.cantidad }}</td>
+                    <td>${{ "%.2f"|format(detalle.sub_total) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center">No hay ventas registradas.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
+      <div class="col-auto align-self-end">
+        <a
+          href="/reporte_ventas_pdf?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}"
+          target="_blank"
+          class="btn btn-danger"
+        >
+          <i class="bi bi-file-earmark-pdf-fill"></i> Generar PDF
+        </a>
+      </div>
     </div>
     <footer class="py-3 my-4">
-        <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-          <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Home</a></li>
-          <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Features</a></li>
-          <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Pricing</a></li>
-          <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">FAQs</a></li>
-          <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
-        </ul>
-        <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
-      </footer>
+      <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Home</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Features</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Pricing</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">FAQs</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">About</a>
+        </li>
+      </ul>
+      <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+
+    <script>
+      function toggleDetalle(id, btn) {
+        const fila = document.getElementById("detalle-" + id);
+        const visible = fila.style.display === "table-row";
+        fila.style.display = visible ? "none" : "table-row";
+        btn.textContent = visible ? "Ver" : "Ocultar";
+      }
+    </script>
+  </body>
 </html>
