@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reporte de Ventas PDF</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #333;
+        padding: 5px;
+        text-align: left;
+      }
+      th {
+        background-color: #eee;
+      }
+      h2 {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Reporte de Ventas</h2>
+    {% if fecha_inicio and fecha_fin %}
+    <p>Desde: {{ fecha_inicio }} Hasta: {{ fecha_fin }}</p>
+    {% endif %} {% for venta_id, venta in ventas.items() %}
+    <h3>
+      Venta ID: {{ venta_id }} | Fecha: {{ venta.fecha }} | Usuario: {{
+      venta.username }}
+    </h3>
+    <p>
+      Método de Pago: {{ venta.metodo_pago }} | Total: ${{
+      "%.2f"|format(venta.total) }}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Artículo</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for detalle in venta.detalles %}
+        <tr>
+          <td>{{ detalle.articulo }}</td>
+          <td>{{ detalle.cantidad }}</td>
+          <td>${{ "%.2f"|format(detalle.sub_total_con_iva) }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="2" style="text-align: right; font-weight: bold">IVA</td>
+          <td>${{ "%.2f"|format(venta.iva) }}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align: right; font-weight: bold">
+            Total
+          </td>
+          <td>${{ "%.2f"|format(venta.total) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% else %}
+    <p>No hay ventas para mostrar.</p>
+    {% endfor %}
+  </body>
+</html>

@@ -6,6 +6,10 @@ from werkzeug.utils import secure_filename
 from conexionBD import obtener_conexion, obtener_conexion_banco
 from datetime import datetime
 from collections import defaultdict
+from io import BytesIO
+from xhtml2pdf import pisa
+from flask import make_response
+from collections import defaultdict
 
 app = Flask("BlackCode")
 app.secret_key = "tu_clave_secreta"
@@ -187,6 +191,104 @@ def reporte_ventas():
         })
 
     return render_template("reporte_ventas.html", ventas=ventas_agrupadas, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+    
+
+from io import BytesIO
+from flask import make_response
+from xhtml2pdf import pisa
+
+@app.route('/reporte_ventas_pdf')
+def reporte_ventas_pdf():
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor(pymysql.cursors.DictCursor)
+    
+    query = """
+        SELECT 
+            v.id AS venta_id,
+            v.fecha,
+            u.username,
+            v.metodo_pago,
+            v.total,
+            vd.articulo_id,
+            a.descripcion AS articulo,
+            vd.cantidad,
+            vd.sub_total
+        FROM Venta v
+        JOIN Usuarios u ON v.usuario_id = u.id
+        JOIN Venta_detalle vd ON vd.venta_id = v.id
+        JOIN Articulos a ON vd.articulo_id = a.id
+        WHERE v.status = 'Pedido entregado'
+    """
+    params = []
+    if fecha_inicio and fecha_fin:
+        query += " AND v.fecha BETWEEN %s AND %s"
+        params.extend([fecha_inicio, fecha_fin])
+    query += " ORDER BY v.fecha DESC"
+    cursor.execute(query, params)
+    resultados = cursor.fetchall()
+    cursor.close()
+    conexion.close()
+
+    from collections import defaultdict
+    ventas_agrupadas = defaultdict(lambda: {
+        "detalles": [],
+        "subtotal": 0.0,
+        "iva": 0.0,
+        "total": 0.0,
+        "fecha": None,
+        "username": None,
+        "metodo_pago": None
+    })
+
+    for row in resultados:
+        venta_id = row["venta_id"]
+        if ventas_agrupadas[venta_id]["fecha"] is None:
+            ventas_agrupadas[venta_id].update({
+                "fecha": row["fecha"],
+                "username": row["username"],
+                "metodo_pago": row["metodo_pago"],
+                "total": row["total"]
+            })
+        sub_total_con_iva = float(row["sub_total"])
+        subtotal_sin_iva = sub_total_con_iva / 1.16
+        iva_detalle = sub_total_con_iva - subtotal_sin_iva
+
+        ventas_agrupadas[venta_id]["detalles"].append({
+            "articulo": row["articulo"],
+            "cantidad": row["cantidad"],
+            "sub_total_con_iva": sub_total_con_iva,
+            "subtotal_sin_iva": subtotal_sin_iva,
+            "iva": iva_detalle,
+        })
+
+        ventas_agrupadas[venta_id]["subtotal"] += subtotal_sin_iva
+        ventas_agrupadas[venta_id]["iva"] += iva_detalle
+        ventas_agrupadas[venta_id]["total"] = row["total"]
+
+    html = render_template(
+        'reporte_ventas_pdf.html',
+        ventas=ventas_agrupadas,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin
+    )
+
+    # Generar PDF con xhtml2pdf
+    pdf = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf)
+    
+    if pisa_status.err:
+        return "Error al generar PDF", 500
+
+    pdf.seek(0)
+    response = make_response(pdf.read())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=reporte_ventas.pdf'
+    return response
+
+
     
 @app.route('/almacen_editar_articulo/<int:id>')
 def almacen_actualizar_articulo(id):
@@ -1548,10 +1650,27 @@ def obtener_pedidos_por_usuario(usuario_id):
 
 @app.route('/pedidos/<int:venta_id>')
 def ver_detalle_pedido(venta_id):
-    detalles = obtener_detalles_pedido(venta_id)  # Función que recupera los detalles del pedido
-    estado = obtener_estado_pedido(venta_id)  # Función que recupera el estado del pedido desde la bitácora
-    total = calcular_total_pedido(venta_id)  # Función que calcula el total del pedido
-    return render_template('detalle_pedido.html', detalles=detalles, estado=estado, venta_id=venta_id, total=total)
+    detalles = obtener_detalles_pedido(venta_id)
+    estado = obtener_estado_pedido(venta_id)
+    
+    total = calcular_total_pedido(venta_id)
+    total = float(total) if total is not None else 0.0
+    
+    costo_envio = obtener_costo_envio(venta_id)
+    costo_envio = float(costo_envio) if costo_envio is not None else 0.0
+    
+    total_final = total + costo_envio
+    
+    return render_template('detalle_pedido.html',
+                           detalles=detalles,
+                           estado=estado,
+                           venta_id=venta_id,
+                           total=total,
+                           costo_envio=costo_envio,
+                           total_final=total_final)
+
+
+
 
 def calcular_total_pedido(venta_id):
     conexion = obtener_conexion()
@@ -1611,6 +1730,41 @@ def aceptar_venta(venta_id, usuario_id):
         print(f"Error: {err}")
     finally:
         conexion.close()
+
+
+def obtener_costo_envio(venta_id):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            # Obtener el estado del usuario que hizo la venta
+            cursor.execute("""
+                SELECT u.ciudad
+                FROM Venta v
+                JOIN Usuarios u ON v.usuario_id = u.id
+                WHERE v.id = %s
+            """, (venta_id,))
+            resultado = cursor.fetchone()
+
+            if not resultado:
+                return 0.0  # Venta no encontrada
+
+            estado = resultado[0]
+
+            if estado == 'Sinaloa':
+                return 0.0  # Envío gratis para Sinaloa
+
+            # Buscar costo de envío por estado en la tabla costos_envio
+            cursor.execute("""
+                SELECT costo
+                FROM costos_envio
+                WHERE estado_destino = %s
+                LIMIT 1
+            """, (estado,))
+            resultado = cursor.fetchone()
+            return resultado[0] if resultado else 0.0
+    finally:
+        conexion.close()
+
 
 @app.route('/actualizar_estado_venta/<int:venta_id>', methods=['POST'])
 def actualizar_estado_venta(venta_id):
